@@ -10,7 +10,110 @@
   <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
 
   <style>
-    /* --- Your CSS here unchanged --- */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #808080;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 40px;
+      min-height: 100vh;
+    }
+    #jspsych-target {
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+      overflow-x: auto;
+      padding: 0 10px;
+    }
+    img {
+      max-height: 400px;
+      max-width: 45vw;
+      height: auto;
+      width: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .card {
+      background: #f0f0f0;
+      padding: 30px 25px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      color: #333;
+      max-width: 650px;
+      margin: 0 auto 25px auto;
+    }
+    .card h1 {
+      font-size: 2.2rem;
+      margin-bottom: 15px;
+      color: #222;
+    }
+    .card h2 {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      color: #222;
+    }
+    .card p {
+      font-size: 1.1rem;
+      line-height: 1.5;
+      margin-bottom: 15px;
+    }
+    .card ol {
+      text-align: left;
+      margin-left: 20px;
+      margin-bottom: 20px;
+    }
+    .form-group input {
+      width: 100%;
+      font-size: 1.1rem;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    .jspsych-btn {
+      font-size: 1.1rem !important;
+      padding: 12px 30px !important;
+      border-radius: 8px !important;
+      background-color: #007acc !important;
+      color: white !important;
+      border: none !important;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 15px;
+    }
+    .jspsych-btn:hover {
+      background-color: #005fa3 !important;
+    }
+    .progress {
+      background-color: #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 12px;
+      margin: 15px auto 0 auto;
+      max-width: 650px;
+    }
+    .progress-bar {
+      height: 12px;
+      background-color: #007acc;
+      transition: width 0.3s ease;
+    }
+    .error-message {
+      color: #d9534f;
+    }
+    .thank-you {
+      color: #007acc;
+    }
+    /* Image labels below images in pairwise trials */
+    .image-label {
+      margin-top: 6px;
+      font-weight: bold;
+      color: #444;
+      font-size: 1rem;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -51,7 +154,10 @@
             <h1>Shadow Color Perception Experiment</h1>
             <p>Thank you for participating in this color perception study.</p>
             <p>This experiment has two phases:</p>
-            <ol><li>Pairwise comparison of shadow intensity</li><li>Brightness difference detection</li></ol>
+            <ol>
+              <li>Pairwise comparison of shadow intensity</li>
+              <li>Brightness difference detection</li>
+            </ol>
           </div>`,
         choices: ['Begin']
       });
@@ -102,8 +208,14 @@
           stimulus: `
             <div class="card">
               <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
-                <div><img src="${pair[0]}" /><p>Image A</p></div>
-                <div><img src="${pair[1]}" /><p>Image B</p></div>
+                <div style="text-align:center;">
+                  <img src="${pair[0]}" alt="Image A"/>
+                  <div class="image-label">Image A</div>
+                </div>
+                <div style="text-align:center;">
+                  <img src="${pair[1]}" alt="Image B"/>
+                  <div class="image-label">Image B</div>
+                </div>
               </div>
               <p>Which shadow is more intense?</p>
             </div>
@@ -140,7 +252,9 @@
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div class="card">
-              <div style="display:flex; justify-content:center;"><img src="${img}" /></div>
+              <div style="display:flex; justify-content:center;">
+                <img src="${img}" alt="Brightness trial image" />
+              </div>
               <p>Do you see a brightness difference?</p>
             </div>
             <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>`,
@@ -180,7 +294,7 @@
 
           try {
             await saveToGoogleSheets(participantID, trialsData);
-            return `<div class="card thank-you"><h2 style="color:var(--primary);">Thank You!</h2><p>Responses saved successfully.</p></div>`;
+            return `<div class="card thank-you"><h2>Thank You!</h2><p>Responses saved successfully.</p></div>`;
           } catch (e) {
             return `<div class="card"><h2 class="error-message">Error</h2><p>Failed to save data: ${e.message}</p></div>`;
           }
