@@ -140,6 +140,7 @@
             <p>You will complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
           </div>`,
         choices: ['Start Comparing']
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
       // Pairwise Trials
