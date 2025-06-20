@@ -170,14 +170,11 @@
           <div class="form-group">
             <input name="participant_id" type="text" pattern="\\d{4}" maxlength="4" required 
                    placeholder="Enter 4-digit ID" autocomplete="off" />
-          </div>
-          <div style="margin: 15px 0; text-align: center;">
-            <p>Are you human? What is 3 + 4?</p>
-            <input name="captcha" type="number" required style="max-width: 100px;" />
           </div>`,
         button_label: 'Continue',
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
+
 
       // Phase 1 Instruction
       timeline.push({
@@ -271,9 +268,6 @@
           const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
           if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
             return `<div class="card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
-          }
-          if (parseInt(formTrial.response.captcha) !== 7) {
-            return `<div class="card"><h2 class="error-message">Verification Failed</h2><p>Incorrect CAPTCHA</p></div>`;
           }
 
           const participantID = formTrial.response.participant_id;
