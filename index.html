@@ -237,37 +237,36 @@
         }
       }
 
-      selectedPairs.forEach((pair, index) => {
-        const progress = ((index + 1) / selectedPairs.length * 100).toFixed(0);
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div class="card">
-              <div class="image-pair-container">
-                <div class="image-container">
-                  <img src="${pair[0]}" alt="Left Image"/>
-                  <div class="image-label">Left Image</div>
-                </div>
-                <div class="image-container">
-                  <img src="${pair[1]}" alt="Right Image"/>
-                  <div class="image-label">Right Image</div>
-                </div>
-              </div>
-              <p>Which shadow is more intense?</p>
+    selectedPairs.forEach((pair, index) => {
+      const progress = ((index + 1) / selectedPairs.length * 100).toFixed(0);
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <div class="card">
+            <div class="image-container" style="margin-bottom: 25px;">
+              <img src="${pair[0]}" alt="Image A"/>
+              <div class="image-label">Image A</div>
             </div>
-            <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>`,
-          choices: ['Left Image', 'Right Image'], // FIXED: Changed button labels
-          data: {
-            phase: 'phase1',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
-          },
-          on_finish: (data) => {
-            data.chosen_image = data.response === 0 ? data.image_left : data.image_right;
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
+            <div class="image-container" style="margin-bottom: 15px;">
+              <img src="${pair[1]}" alt="Image B"/>
+              <div class="image-label">Image B</div>
+            </div>
+            <p>Which shadow is more intense?</p>
+          </div>
+          <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>`,
+        choices: ['Image A', 'Image B'],  // Buttons labeled accordingly
+        data: {
+          phase: 'phase1',
+          image_A: pair[0].split('/').pop(),
+          image_B: pair[1].split('/').pop()
+        },
+        on_finish: (data) => {
+          data.chosen_image = data.response === 0 ? data.image_A : data.image_B;
+          jsPsych.getDisplayElement().innerHTML = '';
+        }
       });
+    });
+
 
       // Phase 2 Instruction
       timeline.push({
