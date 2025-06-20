@@ -9,7 +9,7 @@
   <script src="https://unpkg.com/@jspsych/plugin-preload"></script>
   <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
 
-  <style>
+    <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #808080;
@@ -33,45 +33,25 @@
       height: auto;
       width: auto;
       object-fit: contain;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
-    .card {
+    .welcome-card {
       background: #f0f0f0;
-      padding: 30px 25px;
+      padding: 40px 30px;
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.15);
       color: #333;
-      max-width: 650px;
-      margin: 0 auto 25px auto;
+      max-width: 600px;
+      margin: 0 auto;
     }
-    .card h1 {
+    .welcome-card h1 {
       font-size: 2.2rem;
       margin-bottom: 15px;
       color: #222;
     }
-    .card h2 {
-      font-size: 1.8rem;
-      margin-bottom: 15px;
-      color: #222;
-    }
-    .card p {
+    .welcome-card p {
       font-size: 1.1rem;
       line-height: 1.5;
-      margin-bottom: 15px;
-    }
-    .card ol {
-      text-align: left;
-      margin-left: 20px;
       margin-bottom: 20px;
-    }
-    .form-group input {
-      width: 100%;
-      font-size: 1.1rem;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
     }
     .jspsych-btn {
       font-size: 1.1rem !important;
@@ -82,39 +62,12 @@
       border: none !important;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      margin-top: 15px;
     }
     .jspsych-btn:hover {
       background-color: #005fa3 !important;
     }
-    .progress {
-      background-color: #ddd;
-      border-radius: 8px;
-      overflow: hidden;
-      height: 12px;
-      margin: 15px auto 0 auto;
-      max-width: 650px;
-    }
-    .progress-bar {
-      height: 12px;
-      background-color: #007acc;
-      transition: width 0.3s ease;
-    }
-    .error-message {
-      color: #d9534f;
-    }
-    .thank-you {
-      color: #007acc;
-    }
-    /* Image labels below images in pairwise trials */
-    .image-label {
-      margin-top: 6px;
-      font-weight: bold;
-      color: #444;
-      font-size: 1rem;
-      text-align: center;
-    }
   </style>
+  
 </head>
 <body>
   <div id="jspsych-target"></div>
@@ -227,39 +180,42 @@
 
 
       // Phase 2 Instruction
+     
+      // Instructions Phase 2
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
-          <div class="card">
-            <h2>Phase 2: Brightness Comparison</h2>
-            <p>You'll see images with two shadows.</p>
-            <p><strong>Indicate if there's a brightness difference.</strong></p>
-          </div>`,
-        choices: ['Begin Phase 2']
+          <h2>Phase 2: Shadow Brightness Comparison</h2>
+          <p>Now, please look at the image below which contains two shadows created by spheres.</p>
+          <p>Press "Yes" if you see a brightness difference between the shadows, or "No" if there is no difference or if you are unsure.</p>
+        `,
+        choices: ['Begin Phase 2'],
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
-      // Brightness Trials
-      images.forEach((img, index) => {
-        const progress = (50 + ((index + 1) / images.length * 50)).toFixed(0);
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div class="card">
-              <div style="display:flex; justify-content:center;">
-                <img src="${img}" alt="Brightness trial image" />
-              </div>
-              <p>Do you see a brightness difference?</p>
-            </div>
-            <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>`,
-          choices: ['Yes', 'No'],
-          data: { phase: 'phase2', image: img.split('/').pop() },
-          on_finish: (data) => {
-            data.chosen_image_phase2 = data.image;
-            data.brightness_difference = data.response === 0 ? 'yes' : 'no';
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
+      // Phase 2 trials: show single images (not pairs)
+    images.forEach(img => {
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <div style="display: flex; justify-content: center;">
+            <img src="${img}" alt="Single Image with Two Shadows" />
+          </div>
+          <p>Is there a brightness difference between the two shadows in this image?</p>
+        `,
+        choices: ['Yes', 'No'],
+        data: {
+          phase: 'phase2',
+          image: img.split('/').pop()
+        },
+        post_trial_gap: 500,
+        on_finish: (data) => {
+          data.chosen_image_phase2 = data.image;   // <-- first
+          data.brightness_difference = data.response === 0 ? 'yes' : 'no';  // <-- second
+          jsPsych.getDisplayElement().innerHTML = '';
+        }
       });
+    });
 
       // Final Screen + Save to Google Sheets
       timeline.push({
