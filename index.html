@@ -73,12 +73,12 @@
 <body>
   <div id="jspsych-target"></div>
 
-  <script>
+<script>
     // --- CONFIG ---
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
     const IMAGES_BRANCH = "main";
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQpKaAfue6ccTpXiglmLwJ6bQA7QCz-4etwZciZf9P-TazzdMbuoPmfmpesmAwfTFLFQ/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiiUTjdr5TDfCv0MVu-H7_AfXuMWp3Jor_tGqS1v5JAYCPO_T3IkGB5hwKffKNiPIv6w/exec";
 
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
     const images = Array.from({ length: 15 }, (_, i) => `${repoBase}images/${i + 1}.png`);
@@ -86,13 +86,31 @@
     const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
 
     async function saveToGoogleSheets(participantID, trialsData) {
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantID, trials: trialsData })
-      });
-      if (!response.ok) throw new Error("Google Sheets save failed");
-      return response.json();
+      try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participantID, trials: trialsData })
+        });
+        
+        // Check if response is OK (status 200-299)
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+        
+        // Parse JSON response
+        const result = await response.json();
+        
+        // Check if Apps Script returned success
+        if (result && result.success) {
+          return result;
+        } else {
+          throw new Error(result.error || "Unknown error from Google Sheets");
+        }
+      } catch (e) {
+        throw new Error(`Failed to save data: ${e.message}`);
+      }
     }
 
     function createTimeline() {
@@ -101,20 +119,19 @@
       timeline.push({ type: jsPsychPreload, images });
 
       // Welcome
-
       timeline.push({
-      type: jsPsychHtmlButtonResponse,
-      stimulus: `
-        <div class="welcome-card">
-          <h1>Shadow Color Perception Experiment</h1>
-          <p>Thank you for participating in this color perception study.</p>
-          <p>This experiment has two phases:</p>
-          <p><strong>Phase 1:</strong> Pairwise comparison of shadow brightness</p>
-          <p><strong>Phase 2:</strong> Brightness difference detection</p>
-          <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
-        </div>`,
-      choices: ['Begin']
-    });
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <div class="welcome-card">
+            <h1>Shadow Color Perception Experiment</h1>
+            <p>Thank you for participating in this color perception study.</p>
+            <p>This experiment has two phases:</p>
+            <p><strong>Phase 1:</strong> Pairwise comparison of shadow brightness</p>
+            <p><strong>Phase 2:</strong> Brightness difference detection</p>
+            <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
+          </div>`,
+        choices: ['Begin']
+      });
       
       // ID 
       timeline.push({
@@ -191,28 +208,27 @@
       });
 
       // Phase 2 trials: show single images (not pairs)
-    images.forEach(img => {
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `
-          <div style="display: flex; justify-content: center;">
-            <img src="${img}" alt="Single Image with Two Shadows" />
-          </div>
-          <p>Is there a brightness difference between the two shadows in this image?</p>
-        `,
-        choices: ['Yes', 'No'],
-        data: {
-          phase: 'phase2',
-          image: img.split('/').pop()
-        },
-        post_trial_gap: 500,
-        on_finish: (data) => {
-          data.chosen_image_phase2 = data.image;   // <-- first
-          data.brightness_difference = data.response === 0 ? 'yes' : 'no';  // <-- second
-           jsPsych.getDisplayElement().innerHTML = '';
-        }
+      images.forEach(img => {
+        timeline.push({
+          type: jsPsychHtmlButtonResponse,
+          stimulus: `
+            <div style="display: flex; justify-content: center;">
+              <img src="${img}" alt="Single Image with Two Shadows" />
+            </div>
+            <p>Is there a brightness difference between the two shadows in this image?</p>
+          `,
+          choices: ['Yes', 'No'],
+          data: {
+            phase: 'phase2',
+            image: img.split('/').pop()
+          },
+          post_trial_gap: 500,
+          on_finish: (data) => {
+            data.brightness_difference = data.response === 0 ? 'yes' : 'no';
+            jsPsych.getDisplayElement().innerHTML = '';
+          }
+        });
       });
-    });
 
       // Final Screen + Save to Google Sheets
       timeline.push({
@@ -220,7 +236,7 @@
         stimulus: async () => {
           const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
           if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
-            return `<div class="card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
+            return `<div class="welcome-card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
           }
 
           const participantID = formTrial.response.participant_id;
@@ -236,27 +252,39 @@
           }));
 
           try {
-            await saveToGoogleSheets(participantID, trialsData);
-            return `<div class="card thank-you"><h2>Thank You!</h2><p>Responses saved successfully.</p></div>`;
+            const saveResult = await saveToGoogleSheets(participantID, trialsData);
+            return `
+              <div class="welcome-card">
+                <h2>Thank You!</h2>
+                <p>Responses saved successfully for participant ${participantID}.</p>
+                <p>${saveResult.message || 'Data stored in Google Sheets'}</p>
+              </div>
+            `;
           } catch (e) {
-            return `<div class="card"><h2 class="error-message">Error</h2><p>Failed to save data: ${e.message}</p></div>`;
+            return `
+              <div class="welcome-card">
+                <h2 class="error-message">Data Save Error</h2>
+                <p>${e.message}</p>
+                <p>Please contact the researcher with your participant ID: ${participantID}</p>
+              </div>
+            `;
           }
         },
         choices: ['Repeat Experiment', 'Exit'],
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+        on_finish: (data) => {
+          jsPsych.getDisplayElement().innerHTML = '';
+          if (data.response === 0) {  // Repeat Experiment
+            jsPsych.endExperiment('', true);
+            runExperiment();
+          }
+        }
       });
 
       return timeline;
     }
 
     function runExperiment() {
-      jsPsych.run(createTimeline()).then(() => {
-        const lastTrialData = jsPsych.data.get().last(1).values()[0];
-        if (lastTrialData.response === 0) {  // Repeat Experiment
-          jsPsych.reset();
-          runExperiment();
-        }
-      });
+      jsPsych.run(createTimeline());
     }
 
     runExperiment();
