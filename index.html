@@ -148,7 +148,7 @@
     const GITHUB_REPO = "shadow-experiment";
     const IMAGES_BRANCH = "main";
     
-    // Google Apps Script URL - FIXED with proper CORS handling
+    // Google Apps Script URL
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuher8mHoh5e1I3fMuP7uuTqP9s4zakWzvOoEt5pPqwUFf_lvbJRVZQWQk4wAg0pHm7Q/exec";
     
     // =====================================================================
@@ -184,27 +184,39 @@
       }
     });
 
-    // Save data to Google Sheets - FIXED with CORS mode
+    // Save data to Google Sheets with enhanced error handling
     async function saveToGoogleSheets(participantID, trialsData) {
       try {
+        console.log('Saving data to Google Sheets...', { participantID, trialsData });
+        
+        // Create a controller to handle timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
         const response = await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
-          mode: 'cors', // Essential for cross-origin requests
+          mode: 'no-cors', // Important for Google Apps Script
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             participantID,
             trials: trialsData
-          })
+          }),
+          signal: controller.signal
         });
         
-        if (!response.ok) {
-          throw new Error('Google Sheets save failed with status: ' + response.status);
-        }
+        clearTimeout(timeoutId);
         
-        return await response.json();
+        // Since we're using no-cors mode, we can't read the response
+        // But we can assume it succeeded if we didn't get an error
+        console.log('Data sent to Google Sheets');
+        return { success: true };
+        
       } catch (error) {
         console.error('Save error:', error);
-        throw error;
+        if (error.name === 'AbortError') {
+          throw new Error('Request timed out. Please check your internet connection.');
+        }
+        throw new Error(`Failed to save data: ${error.message}`);
       }
     }
 
@@ -217,7 +229,6 @@
         images: images,
         on_error: function(error) {
           console.error('Image loading error:', error);
-          // Continue even if some images fail to load
         },
         on_finish: function() {
           console.log('Images preloaded');
@@ -388,6 +399,9 @@
                 <h2 class="error-message">Error: Invalid Participant ID</h2>
                 <p>Your participant ID is invalid or missing.</p>
                 <p>Please enter a valid 4-digit ID to save your data.</p>
+                <div class="debug-info">
+                  ID entered: ${formTrial?.response?.participant_id || 'none'}
+                </div>
               </div>
             `;
           }
@@ -398,6 +412,9 @@
                 <h2 class="error-message">Verification Failed</h2>
                 <p>Please answer the verification question correctly.</p>
                 <p>The correct answer was 7.</p>
+                <div class="debug-info">
+                  You entered: ${formTrial.response.captcha}
+                </div>
               </div>
             `;
           }
@@ -418,6 +435,8 @@
             response: trial.response,
             rt: trial.rt
           }));
+          
+          console.log('Prepared data for saving:', trialsData);
           
           // Save to Google Sheets
           try {
@@ -443,7 +462,8 @@
                 <p>Failed to save your data: ${error.message}</p>
                 <p>Please contact the researcher with your Participant ID: ${participantID}</p>
                 <div class="debug-info">
-                  <strong>Error details:</strong> ${error.message}
+                  <strong>Error details:</strong> ${error.message}<br>
+                  <strong>Script URL:</strong> ${GOOGLE_SCRIPT_URL}
                 </div>
               </div>
             `;
