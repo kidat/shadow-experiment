@@ -309,7 +309,7 @@
     function runExperiment() {
       jsPsych.run(createTimeline()).then(() => {
         const lastTrialData = jsPsych.data.get().last(1).values()[0];
-        if (lastTrialData.response === 0) {
+        if (lastTrialData.response === 0) {  // Repeat Experiment
           jsPsych.reset();
           runExperiment();
         }
