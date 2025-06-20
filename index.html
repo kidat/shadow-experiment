@@ -3,116 +3,117 @@
 <head>
   <meta charset="UTF-8" />
   <title>Shadow Color Perception Experiment</title>
+
+  <!-- jsPsych CSS & JS -->
+  <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
   <script src="https://unpkg.com/jspsych@7.3.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-html-form"></script>
   <script src="https://unpkg.com/@jspsych/plugin-preload"></script>
-  <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
 
   <style>
+    :root {
+      --primary: #2c5282;       --primary-light: #4299e1;
+      --secondary: #718096;     --background: #f7fafc;
+      --card-bg: #ffffff;       --success: #38a169;
+      --warning: #e53e3e;
+    }
+    
     body {
-      font-family: Arial, sans-serif;
-      background-color: #808080;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding-top: 40px;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--background);
+      margin: 0; padding: 30px 0;
       min-height: 100vh;
+      display: flex; justify-content: center;
     }
+    
     #jspsych-target {
-      width: 100%;
-      max-width: 900px;
-      text-align: center;
-      overflow-x: auto;
-      padding: 0 10px;
+      width: 100%; max-width: 700px;
+      padding: 0 15px;
     }
+    
     img {
-      max-height: 400px;
-      max-width: 45vw;
-      height: auto;
-      width: auto;
-      object-fit: contain;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      max-height: 320px; max-width: 40vw;
+      border-radius: 8px; 
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
+    
     .card {
-      background: #f0f0f0;
-      padding: 30px 25px;
+      background: var(--card-bg);
+      padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      color: #333;
-      max-width: 650px;
-      margin: 0 auto 25px auto;
+      margin: 0 auto 25px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.07);
+      border: 1px solid rgba(0,0,0,0.05);
     }
-    .card h1 {
-      font-size: 2.2rem;
-      margin-bottom: 15px;
-      color: #222;
+    
+    .card h1, .card h2 { 
+      color: var(--primary); 
+      margin-top: 0;
     }
-    .card h2 {
-      font-size: 1.8rem;
-      margin-bottom: 15px;
-      color: #222;
-    }
-    .card p {
-      font-size: 1.1rem;
-      line-height: 1.5;
-      margin-bottom: 15px;
-    }
-    .card ol {
-      text-align: left;
-      margin-left: 20px;
-      margin-bottom: 20px;
-    }
-    .form-group input {
-      width: 100%;
-      font-size: 1.1rem;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    .jspsych-btn {
-      font-size: 1.1rem !important;
-      padding: 12px 30px !important;
+    
+    .btn {
+      font-size: 1rem !important;
+      padding: 10px 22px !important;
       border-radius: 8px !important;
-      background-color: #007acc !important;
+      background: var(--primary) !important;
       color: white !important;
       border: none !important;
       cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin-top: 15px;
+      transition: all 0.2s;
+      margin: 5px;
     }
-    .jspsych-btn:hover {
-      background-color: #005fa3 !important;
+    
+    .btn:hover {
+      background: var(--primary-light) !important;
+      transform: translateY(-2px);
     }
+    
     .progress {
-      background-color: #ddd;
-      border-radius: 8px;
-      overflow: hidden;
-      height: 12px;
-      margin: 15px auto 0 auto;
-      max-width: 650px;
+      width: 100%; max-width: 400px; height: 5px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      margin: 20px auto;
     }
+    
     .progress-bar {
-      height: 12px;
-      background-color: #007acc;
-      transition: width 0.3s ease;
+      height: 100%;
+      background: var(--primary);
+      border-radius: 3px;
+      transition: width 0.3s;
     }
-    .error-message {
-      color: #d9534f;
+    
+    .form-group {
+      margin: 15px 0;
     }
+    
+    .form-group input {
+      padding: 8px 12px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      width: 100%;
+      max-width: 180px;
+      margin: 5px auto;
+      display: block;
+    }
+    
     .thank-you {
-      color: #007acc;
-    }
-    /* Image labels below images in pairwise trials */
-    .image-label {
-      margin-top: 6px;
-      font-weight: bold;
-      color: #444;
-      font-size: 1rem;
       text-align: center;
+      padding: 20px;
+    }
+    
+    .error-message {
+      color: var(--warning);
+      font-weight: bold;
+    }
+    
+    @media (max-width: 768px) {
+      img {
+        max-width: 75vw;
+      }
+      .card {
+        padding: 20px;
+      }
     }
   </style>
 </head>
@@ -120,10 +121,13 @@
   <div id="jspsych-target"></div>
 
   <script>
-    // --- CONFIG ---
+    // ===========================
+    // CONFIGURATION
+    // ===========================
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
     const IMAGES_BRANCH = "main";
+
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiCBMryPz7WrvuIdB2ebLBY_0tZDJFXMnwGKj_yj-u_0Ot-lkvFjKc30uEeZdRa1ztxg/exec";
 
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
@@ -131,22 +135,37 @@
 
     const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
 
+    // ===========================
+    // Save data to Google Sheets
+    // ===========================
     async function saveToGoogleSheets(participantID, trialsData) {
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantID, trials: trialsData })
-      });
-      if (!response.ok) throw new Error("Google Sheets save failed");
-      return response.json();
+      try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participantID, trials: trialsData })
+        });
+        if (!response.ok) throw new Error('Google Sheets save failed');
+        return await response.json();
+      } catch (error) {
+        console.error('Save error:', error);
+        throw error;
+      }
     }
 
+    // ===========================
+    // Build timeline
+    // ===========================
     function createTimeline() {
       const timeline = [];
 
-      timeline.push({ type: jsPsychPreload, images });
+      // Preload images
+      timeline.push({
+        type: jsPsychPreload,
+        images: images
+      });
 
-      // Welcome
+      // Welcome screen
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
@@ -158,14 +177,20 @@
               <li>Pairwise comparison of shadow intensity</li>
               <li>Brightness difference detection</li>
             </ol>
-          </div>`,
+          </div>
+        `,
         choices: ['Begin']
       });
 
-      // ID & CAPTCHA
+      // Participant ID input
       timeline.push({
         type: jsPsychSurveyHtmlForm,
-        preamble: '<div class="card"><h3>Participant ID</h3><p>Enter your 4-digit ID</p></div>',
+        preamble: `
+          <div class="card">
+            <h3>Participant ID</h3>
+            <p>Enter your 4-digit ID</p>
+          </div>
+        `,
         html: `
           <div class="form-group">
             <input name="participant_id" type="text" pattern="\\d{4}" maxlength="4" required 
@@ -174,25 +199,29 @@
           <div style="margin: 15px 0; text-align: center;">
             <p>Are you human? What is 3 + 4?</p>
             <input name="captcha" type="number" required style="max-width: 100px;" />
-          </div>`,
+          </div>
+        `,
         button_label: 'Continue',
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
-      // Phase 1 Instruction
+      // Phase 1 instructions
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="card">
             <h2>Phase 1: Pairwise Comparison</h2>
-            <p>You will see two images side by side.</p>
-            <p><strong>Choose the image with the more intense shadow.</strong></p>
-            <p>You will complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
-          </div>`,
-        choices: ['Start Comparing']
+            <p>In this phase, you will see two images side by side.</p>
+            <p><strong>Please choose the image with the more intense shadow.</strong></p>
+            <p>You will complete ${Math.floor(images.length/5)*4} comparisons.</p>
+          </div>
+          <div class="progress"><div class="progress-bar" style="width: 10%"></div></div>
+        `,
+        choices: ['Start Comparing'],
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
-      // Pairwise Trials
+      // Generate pairs for Phase 1 trials
       const selectedPairs = [];
       for (let i = 0; i < images.length; i += 5) {
         const block = images.slice(i, i + 5);
@@ -201,65 +230,74 @@
         }
       }
 
+      // Phase 1 trials
       selectedPairs.forEach((pair, index) => {
         const progress = ((index + 1) / selectedPairs.length * 100).toFixed(0);
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div class="card">
-              <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
-                <div style="text-align:center;">
-                  <img src="${pair[0]}" alt="Image A"/>
-                  <div class="image-label">Image A</div>
+              <div style="display:flex; justify-content:center; gap:30px; margin:15px 0; flex-wrap: wrap;">
+                <div>
+                  <img src="${pair[0]}" alt="Left Image" />
+                  <p style="text-align: center; margin-top: 8px;">Image A</p>
                 </div>
-                <div style="text-align:center;">
-                  <img src="${pair[1]}" alt="Image B"/>
-                  <div class="image-label">Image B</div>
+                <div>
+                  <img src="${pair[1]}" alt="Right Image" />
+                  <p style="text-align: center; margin-top: 8px;">Image B</p>
                 </div>
               </div>
               <p>Which shadow is more intense?</p>
             </div>
-            <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>`,
+            <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>
+          `,
           choices: ['Image A', 'Image B'],
-          data: {
-            phase: 'phase1',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
+          data: { 
+            phase: 'phase1', 
+            image_left: pair[0].split('/').pop(), 
+            image_right: pair[1].split('/').pop() 
           },
+          post_trial_gap: 500,
           on_finish: (data) => {
-            data.chosen_image = data.response === 0 ? data.image_left : data.image_right;
+            data.chosen_image = data.response === 0 ? pair[0].split('/').pop() : pair[1].split('/').pop();
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
       });
 
-      // Phase 2 Instruction
+      // Phase 2 instructions
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="card">
             <h2>Phase 2: Brightness Comparison</h2>
-            <p>You'll see images with two shadows.</p>
-            <p><strong>Indicate if there's a brightness difference.</strong></p>
-          </div>`,
-        choices: ['Begin Phase 2']
+            <p>In this phase, you will see individual images containing two shadows.</p>
+            <p><strong>Please indicate if you see a brightness difference between the shadows.</strong></p>
+            <p>You will evaluate ${images.length} images.</p>
+          </div>
+          <div class="progress"><div class="progress-bar" style="width:50%"></div></div>
+        `,
+        choices: ['Begin Phase 2'],
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
-      // Brightness Trials
+      // Phase 2 trials
       images.forEach((img, index) => {
         const progress = (50 + ((index + 1) / images.length * 50)).toFixed(0);
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div class="card">
-              <div style="display:flex; justify-content:center;">
-                <img src="${img}" alt="Brightness trial image" />
+              <div style="display:flex; justify-content:center; margin:15px 0;">
+                <img src="${img}" alt="Shadow Comparison" />
               </div>
-              <p>Do you see a brightness difference?</p>
+              <p>Do you see a brightness difference between the two shadows?</p>
             </div>
-            <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>`,
+            <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>
+          `,
           choices: ['Yes', 'No'],
           data: { phase: 'phase2', image: img.split('/').pop() },
+          post_trial_gap: 500,
           on_finish: (data) => {
             data.chosen_image_phase2 = data.image;
             data.brightness_difference = data.response === 0 ? 'yes' : 'no';
@@ -268,35 +306,68 @@
         });
       });
 
-      // Final Screen + Save to Google Sheets
+      // Final screen: data save & options
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: async () => {
           const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
+
+          // Validate participant ID and CAPTCHA
           if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
-            return `<div class="card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
+            return `
+              <div class="card">
+                <h2 class="error-message">Error</h2>
+                <p>Invalid or missing Participant ID - data not saved</p>
+              </div>
+            `;
           }
+
           if (parseInt(formTrial.response.captcha) !== 7) {
-            return `<div class="card"><h2 class="error-message">Verification Failed</h2><p>Incorrect CAPTCHA</p></div>`;
+            return `
+              <div class="card">
+                <h2 class="error-message">Verification Failed</h2>
+                <p>Please answer the verification question correctly</p>
+              </div>
+            `;
           }
 
           const participantID = formTrial.response.participant_id;
-          const trialsData = jsPsych.data.get().filter(trial => trial.phase).values().map(trial => ({
+
+          // Collect trial data
+          const trialsData = jsPsych.data.get().filter(trial => 
+            trial.phase && ['phase1', 'phase2'].includes(trial.phase)
+          ).values().map(trial => ({
             phase: trial.phase,
             image_left: trial.image_left || '',
             image_right: trial.image_right || '',
             chosen_image: trial.chosen_image || '',
             image: trial.image || '',
+            chosen_image_phase2: trial.chosen_image_phase2 || '',
             brightness_difference: trial.brightness_difference || '',
             response: trial.response,
             rt: trial.rt
           }));
 
+          // Save and show feedback
           try {
             await saveToGoogleSheets(participantID, trialsData);
-            return `<div class="card thank-you"><h2>Thank You!</h2><p>Responses saved successfully.</p></div>`;
-          } catch (e) {
-            return `<div class="card"><h2 class="error-message">Error</h2><p>Failed to save data: ${e.message}</p></div>`;
+            return `
+              <div class="card thank-you">
+                <h2 style="color:var(--primary);">Thank You!</h2>
+                <p>Your responses have been successfully saved.</p>
+                <p>We appreciate your participation in this study.</p>
+                <p style="margin: 25px 0 15px; font-weight:500;">What would you like to do next?</p>
+              </div>
+            `;
+          } catch (error) {
+            return `
+              <div class="card">
+                <h2 class="error-message">Error</h2>
+                <p>Data save failed - please notify the researcher</p>
+                <p>Error details: ${error.message}</p>
+                <p>Your Participant ID: ${participantID}</p>
+              </div>
+            `;
           }
         },
         choices: ['Repeat Experiment', 'Exit'],
@@ -306,10 +377,13 @@
       return timeline;
     }
 
+    // ===========================
+    // Run experiment
+    // ===========================
     function runExperiment() {
       jsPsych.run(createTimeline()).then(() => {
         const lastTrialData = jsPsych.data.get().last(1).values()[0];
-        if (lastTrialData.response === 0) {
+        if (lastTrialData.response === 0) { // 'Repeat Experiment'
           jsPsych.reset();
           runExperiment();
         }
@@ -317,6 +391,7 @@
     }
 
     runExperiment();
+
   </script>
 </body>
 </html>
