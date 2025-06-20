@@ -101,19 +101,21 @@
 
       // Welcome
       timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `
-          <div class="card">
-            <h1>Shadow Color Perception Experiment</h1>
-            <p>Thank you for participating in this color perception study.</p>
-            <p>This experiment has two phases:</p>
-            <ol>
-              <li>Pairwise comparison of shadow Brightness</li>
-              <li>Brightness difference detection</li>
-            </ol>
-          </div>`,
-        choices: ['Begin']
-      });
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+        <div class="welcome-card">
+          <h1>Shadow Color Perception Experiment</h1>
+          <p>Thank you for participating in this color perception study.</p>
+          <p>This experiment has two phases:</p>
+          <ol>
+            <li>Pairwise comparison of shadow brightness</li>
+            <li>Brightness difference detection</li>
+          </ol>
+          <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
+        </div>`,
+      choices: ['Begin']
+    });
+
 
       // ID 
       timeline.push({
