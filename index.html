@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <title>Shadow Color Perception Experiment</title>
   <script src="https://unpkg.com/jspsych@7.3.0"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-button-response"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-preload"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.3"></script>
   <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
 
   <style>
@@ -149,9 +149,15 @@
     const IMAGES_BRANCH = "main";
     
     // Google Apps Script URL
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykvd9RvQGAy5rNGcyuTqGg1u0Z82Wvl_GO4MYvgmSmihVxkE505Y8mdhsN2p_pwweFDg/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuher8mHoh5e1I3fMuP7uuTqP9s4zakWzvOoEt5pPqwUFf_lvbJRVZQWQk4wAg0pHm7Q/exec";
     
     // =====================================================================
+    
+    // Initialize plugins
+    const jsPsych = initJsPsych();
+    const jsPsychHtmlButtonResponse = initJsPsychHtmlButtonResponse();
+    const jsPsychSurveyHtmlForm = initJsPsychSurveyHtmlForm();
+    const jsPsychPreload = initJsPsychPreload();
     
     // Image paths for GitHub Pages
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
@@ -166,45 +172,20 @@
       images
     });
 
-    const jsPsych = initJsPsych({ 
-      display_element: 'jspsych-target',
-      on_error: function(error) {
-        console.error('jsPsych Error:', error);
-        document.getElementById('jspsych-target').innerHTML = `
-          <div class="card" style="border: 2px solid var(--warning);">
-            <h2 class="error-message">Experiment Error</h2>
-            <p>${error.message}</p>
-            <p>Please try refreshing the page or contact the researcher.</p>
-            <div class="debug-info">
-              <strong>Error details:</strong><br>
-              ${error.stack || 'No stack trace available'}
-            </div>
-          </div>
-        `;
-      }
-    });
-
-    // Save data to Google Sheets with enhanced error handling
+    // Save data to Google Sheets
     async function saveToGoogleSheets(participantID, trialsData) {
       try {
         console.log('Saving data to Google Sheets...', { participantID, trialsData });
         
-        // Create a controller to handle timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
         const response = await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
-          mode: 'no-cors', // Important for Google Apps Script
+          mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             participantID,
             trials: trialsData
-          }),
-          signal: controller.signal
+          })
         });
-        
-        clearTimeout(timeoutId);
         
         // Since we're using no-cors mode, we can't read the response
         // But we can assume it succeeded if we didn't get an error
@@ -213,9 +194,6 @@
         
       } catch (error) {
         console.error('Save error:', error);
-        if (error.name === 'AbortError') {
-          throw new Error('Request timed out. Please check your internet connection.');
-        }
         throw new Error(`Failed to save data: ${error.message}`);
       }
     }
@@ -225,7 +203,7 @@
       
       // Preload images
       timeline.push({ 
-        type: 'preload',
+        type: jsPsychPreload,
         images: images,
         on_error: function(error) {
           console.error('Image loading error:', error);
@@ -237,7 +215,7 @@
       
       // Welcome screen
       timeline.push({
-        type: 'html-button-response',
+        type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="card">
             <h1>Shadow Perception Experiment</h1>
@@ -258,7 +236,7 @@
       
       // Participant ID input
       timeline.push({
-        type: 'survey-html-form',
+        type: jsPsychSurveyHtmlForm,
         preamble: '<div class="card"><h3>Participant Information</h3><p>Please enter your participant ID</p></div>',
         html: `
           <div class="form-group">
@@ -279,7 +257,7 @@
       
       // Phase 1 instructions
       timeline.push({
-        type: 'html-button-response',
+        type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="card">
             <h2>Phase 1: Pairwise Comparison</h2>
@@ -309,7 +287,7 @@
       selectedPairs.forEach((pair, index) => {
         const progress = ((index + 1) / selectedPairs.length * 100).toFixed(0);
         timeline.push({
-          type: 'html-button-response',
+          type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div class="card">
               <div class="image-container">
@@ -343,7 +321,7 @@
       
       // Phase 2 instructions
       timeline.push({
-        type: 'html-button-response',
+        type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="card">
             <h2>Phase 2: Brightness Comparison</h2>
@@ -364,7 +342,7 @@
       images.forEach((img, index) => {
         const progress = (50 + ((index + 1) / images.length * 50)).toFixed(0);
         timeline.push({
-          type: 'html-button-response',
+          type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div class="card">
               <div style="display:flex; justify-content:center; margin:15px 0;">
@@ -388,7 +366,7 @@
       
       // Final trial with clear options
       timeline.push({
-        type: 'html-button-response',
+        type: jsPsychHtmlButtonResponse,
         stimulus: async function() {
           const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
           
