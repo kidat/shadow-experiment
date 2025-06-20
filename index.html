@@ -18,7 +18,7 @@
     }
     
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: var(--background);
       margin: 0; padding: 30px 0;
       min-height: 100vh;
@@ -34,6 +34,8 @@
       max-height: 320px; max-width: 40vw;
       border-radius: 8px; 
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      background: #f0f0f0;
+      border: 1px solid #ddd;
     }
     
     .card {
@@ -41,11 +43,18 @@
       border-radius: 12px; margin: 0 auto 25px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.07);
       border: 1px solid rgba(0,0,0,0.05);
+      transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
     
     .card h1, .card h2 { 
       color: var(--primary); 
       margin-top: 0;
+      text-align: center;
     }
     
     .btn {
@@ -53,28 +62,33 @@
       border-radius: 8px !important; background: var(--primary) !important;
       color: white !important; border: none !important; cursor: pointer;
       transition: all 0.2s; margin: 5px;
+      font-weight: 600;
     }
     
     .btn:hover {
       background: var(--primary-light) !important;
       transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     
     .progress {
-      width: 100%; max-width: 400px; height: 5px;
-      background: #e2e8f0; border-radius: 3px; margin: 20px auto;
+      width: 100%; max-width: 400px; height: 10px;
+      background: #e2e8f0; border-radius: 5px; margin: 20px auto;
+      overflow: hidden;
     }
     
     .progress-bar {
       height: 100%; background: var(--primary); 
-      border-radius: 3px; transition: width 0.3s;
+      border-radius: 5px; transition: width 0.3s;
     }
     
-    .form-group { margin: 15px 0; }
+    .form-group { margin: 15px 0; text-align: center; }
     .form-group input {
-      padding: 8px 12px; border: 1px solid #cbd5e0;
-      border-radius: 6px; width: 100%; max-width: 180px;
-      margin: 5px auto; display: block;
+      padding: 10px 15px; border: 1px solid #cbd5e0;
+      border-radius: 8px; width: 100%; max-width: 200px;
+      margin: 10px auto; display: block;
+      font-size: 1rem;
+      text-align: center;
     }
     
     .thank-you {
@@ -87,9 +101,37 @@
       font-weight: bold;
     }
     
+    .debug-info {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+    
+    .image-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    
+    .image-pair {
+      text-align: center;
+    }
+    
+    .image-pair p {
+      margin-top: 8px;
+      font-weight: 500;
+    }
+    
     @media (max-width: 768px) {
       img { max-width: 75vw; }
       .card { padding: 20px; }
+      .image-container { flex-direction: column; align-items: center; }
     }
   </style>
 </head>
@@ -98,15 +140,15 @@
 
   <script>
     // =====================================================================
-    // CONFIGURATION: Set these values before deploying
+    // CONFIGURATION
     // =====================================================================
     
-    // GitHub repository information (replace with your details)
+    // GitHub repository information
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
-    const IMAGES_BRANCH = "main"; // Branch where images are stored
+    const IMAGES_BRANCH = "main";
     
-    // Google Apps Script URL (from your deployment)
+    // Google Apps Script URL - FIXED with proper CORS handling
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuher8mHoh5e1I3fMuP7uuTqP9s4zakWzvOoEt5pPqwUFf_lvbJRVZQWQk4wAg0pHm7Q/exec";
     
     // =====================================================================
@@ -115,13 +157,39 @@
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
     const images = Array.from({ length: 15 }, (_, i) => `${repoBase}images/${i + 1}.png`);
     
-    const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
+    // Log configuration for debugging
+    console.log('Experiment Configuration:', {
+      GITHUB_USERNAME,
+      GITHUB_REPO,
+      IMAGES_BRANCH,
+      GOOGLE_SCRIPT_URL,
+      images
+    });
 
-    // Save data to Google Sheets
+    const jsPsych = initJsPsych({ 
+      display_element: 'jspsych-target',
+      on_error: function(error) {
+        console.error('jsPsych Error:', error);
+        document.getElementById('jspsych-target').innerHTML = `
+          <div class="card" style="border: 2px solid var(--warning);">
+            <h2 class="error-message">Experiment Error</h2>
+            <p>${error.message}</p>
+            <p>Please try refreshing the page or contact the researcher.</p>
+            <div class="debug-info">
+              <strong>Error details:</strong><br>
+              ${error.stack || 'No stack trace available'}
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    // Save data to Google Sheets - FIXED with CORS mode
     async function saveToGoogleSheets(participantID, trialsData) {
       try {
         const response = await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
+          mode: 'cors', // Essential for cross-origin requests
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             participantID,
@@ -130,7 +198,7 @@
         });
         
         if (!response.ok) {
-          throw new Error('Google Sheets save failed');
+          throw new Error('Google Sheets save failed with status: ' + response.status);
         }
         
         return await response.json();
@@ -144,57 +212,77 @@
       const timeline = [];
       
       // Preload images
-      timeline.push({ type: jsPsychPreload, images: images });
+      timeline.push({ 
+        type: 'preload',
+        images: images,
+        on_error: function(error) {
+          console.error('Image loading error:', error);
+          // Continue even if some images fail to load
+        },
+        on_finish: function() {
+          console.log('Images preloaded');
+        }
+      });
       
       // Welcome screen
       timeline.push({
-        type: jsPsychHtmlButtonResponse,
+        type: 'html-button-response',
         stimulus: `
           <div class="card">
-            <h1>Shadow Color Perception Experiment</h1>
-            <p>Thank you for participating in this color perception study.</p>
+            <h1>Shadow Perception Experiment</h1>
+            <p>Thank you for participating in this study about how we perceive shadows.</p>
             <p>This experiment has two phases:</p>
             <ol>
-              <li>Pairwise comparison of shadow intensity</li>
-              <li>Brightness difference detection</li>
+              <li>Compare pairs of images to see which shadow appears more intense</li>
+              <li>Look at individual images to detect brightness differences</li>
             </ol>
+            <p>This study takes about 10 minutes to complete.</p>
           </div>
         `,
-        choices: ['Begin']
+        choices: ['Begin Experiment'],
+        on_load: function() {
+          console.log('Welcome screen loaded');
+        }
       });
       
       // Participant ID input
       timeline.push({
-        type: jsPsychSurveyHtmlForm,
-        preamble: '<div class="card"><h3>Participant ID</h3><p>Enter your 4-digit ID</p></div>',
+        type: 'survey-html-form',
+        preamble: '<div class="card"><h3>Participant Information</h3><p>Please enter your participant ID</p></div>',
         html: `
           <div class="form-group">
             <input name="participant_id" type="text" pattern="\\d{4}" maxlength="4" required 
                    placeholder="Enter 4-digit ID" autocomplete="off" />
           </div>
-          <div style="margin: 15px 0; text-align: center;">
+          <div class="form-group">
             <p>Are you human? What is 3 + 4?</p>
             <input name="captcha" type="number" required style="max-width: 100px;" />
           </div>
         `,
         button_label: 'Continue',
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+        on_finish: function(data) {
+          console.log('Participant ID entered:', data.response.participant_id);
+          jsPsych.getDisplayElement().innerHTML = '';
+        }
       });
       
       // Phase 1 instructions
       timeline.push({
-        type: jsPsychHtmlButtonResponse,
+        type: 'html-button-response',
         stimulus: `
           <div class="card">
             <h2>Phase 1: Pairwise Comparison</h2>
             <p>In this phase, you will see two images side by side.</p>
-            <p><strong>Please choose the image with the more intense shadow.</strong></p>
+            <p><strong>Please choose the image where the shadow appears more intense.</strong></p>
             <p>You will complete ${Math.floor(images.length/5)*4} comparisons.</p>
           </div>
           <div class="progress"><div class="progress-bar" style="width: 10%"></div></div>
         `,
         choices: ['Start Comparing'],
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+        on_finish: function() {
+          console.log('Phase 1 instructions complete');
+          jsPsych.getDisplayElement().innerHTML = '';
+        }
       });
       
       // Generate pairwise trials
@@ -210,17 +298,17 @@
       selectedPairs.forEach((pair, index) => {
         const progress = ((index + 1) / selectedPairs.length * 100).toFixed(0);
         timeline.push({
-          type: jsPsychHtmlButtonResponse,
+          type: 'html-button-response',
           stimulus: `
             <div class="card">
-              <div style="display:flex; justify-content:center; gap:30px; margin:15px 0; flex-wrap: wrap;">
-                <div>
-                  <img src="${pair[0]}" alt="Left Image" />
-                  <p style="text-align: center; margin-top: 8px;">Image A</p>
+              <div class="image-container">
+                <div class="image-pair">
+                  <img src="${pair[0]}" alt="Image A" onerror="this.style.display='none'; console.error('Image failed to load: ${pair[0]}')"/>
+                  <p>Image A</p>
                 </div>
-                <div>
-                  <img src="${pair[1]}" alt="Right Image" />
-                  <p style="text-align: center; margin-top: 8px;">Image B</p>
+                <div class="image-pair">
+                  <img src="${pair[1]}" alt="Image B" onerror="this.style.display='none'; console.error('Image failed to load: ${pair[1]}')"/>
+                  <p>Image B</p>
                 </div>
               </div>
               <p>Which shadow is more intense?</p>
@@ -234,8 +322,9 @@
             image_right: pair[1].split('/').pop() 
           },
           post_trial_gap: 500,
-          on_finish: (data) => {
+          on_finish: function(data) {
             data.chosen_image = data.response === 0 ? pair[0].split('/').pop() : pair[1].split('/').pop();
+            console.log(`Phase 1 trial ${index+1}: chose ${data.chosen_image}`);
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -243,7 +332,7 @@
       
       // Phase 2 instructions
       timeline.push({
-        type: jsPsychHtmlButtonResponse,
+        type: 'html-button-response',
         stimulus: `
           <div class="card">
             <h2>Phase 2: Brightness Comparison</h2>
@@ -254,18 +343,21 @@
           <div class="progress"><div class="progress-bar" style="width:50%"></div></div>
         `,
         choices: ['Begin Phase 2'],
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+        on_finish: function() {
+          console.log('Phase 2 instructions complete');
+          jsPsych.getDisplayElement().innerHTML = '';
+        }
       });
       
       // Phase 2 trials
       images.forEach((img, index) => {
         const progress = (50 + ((index + 1) / images.length * 50)).toFixed(0);
         timeline.push({
-          type: jsPsychHtmlButtonResponse,
+          type: 'html-button-response',
           stimulus: `
             <div class="card">
               <div style="display:flex; justify-content:center; margin:15px 0;">
-                <img src="${img}" alt="Shadow Comparison" />
+                <img src="${img}" alt="Shadow Comparison" onerror="this.style.display='none'; console.error('Image failed to load: ${img}')" />
               </div>
               <p>Do you see a brightness difference between the two shadows?</p>
             </div>
@@ -274,9 +366,10 @@
           choices: ['Yes', 'No'],
           data: { phase: 'phase2', image: img.split('/').pop() },
           post_trial_gap: 500,
-          on_finish: (data) => {
+          on_finish: function(data) {
             data.chosen_image_phase2 = data.image;
             data.brightness_difference = data.response === 0 ? 'yes' : 'no';
+            console.log(`Phase 2 trial ${index+1}: brightness difference = ${data.brightness_difference}`);
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -284,27 +377,27 @@
       
       // Final trial with clear options
       timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: async () => {
-          const formTrial = jsPsych.data.get().filter({ 
-            trial_type: 'survey-html-form' 
-          }).values()[0];
+        type: 'html-button-response',
+        stimulus: async function() {
+          const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
           
           // Validate participant ID and CAPTCHA
           if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
             return `
-              <div class="card">
-                <h2 class="error-message">Error</h2>
-                <p>Invalid or missing Participant ID - data not saved</p>
+              <div class="card" style="border: 2px solid var(--warning);">
+                <h2 class="error-message">Error: Invalid Participant ID</h2>
+                <p>Your participant ID is invalid or missing.</p>
+                <p>Please enter a valid 4-digit ID to save your data.</p>
               </div>
             `;
           }
           
           if (parseInt(formTrial.response.captcha) !== 7) {
             return `
-              <div class="card">
+              <div class="card" style="border: 2px solid var(--warning);">
                 <h2 class="error-message">Verification Failed</h2>
-                <p>Please answer the verification question correctly</p>
+                <p>Please answer the verification question correctly.</p>
+                <p>The correct answer was 7.</p>
               </div>
             `;
           }
@@ -328,29 +421,38 @@
           
           // Save to Google Sheets
           try {
-            await saveToGoogleSheets(participantID, trialsData);
+            const saveResult = await saveToGoogleSheets(participantID, trialsData);
+            console.log('Save result:', saveResult);
             
             return `
               <div class="card thank-you">
-                <h2 style="color:var(--primary);">Thank You!</h2>
+                <h2 style="color:var(--success);">Thank You!</h2>
                 <p>Your responses have been successfully saved.</p>
                 <p>We appreciate your participation in this study.</p>
                 <p style="margin: 25px 0 15px; font-weight:500;">What would you like to do next?</p>
+                <div class="debug-info">
+                  <strong>Data saved for participant:</strong> ${participantID}<br>
+                  <strong>Trials recorded:</strong> ${trialsData.length}
+                </div>
               </div>
             `;
           } catch (error) {
             return `
-              <div class="card">
-                <h2 class="error-message">Error</h2>
-                <p>Data save failed - please notify the researcher</p>
-                <p>Error details: ${error.message}</p>
-                <p>Your Participant ID: ${participantID}</p>
+              <div class="card" style="border: 2px solid var(--warning);">
+                <h2 class="error-message">Data Save Error</h2>
+                <p>Failed to save your data: ${error.message}</p>
+                <p>Please contact the researcher with your Participant ID: ${participantID}</p>
+                <div class="debug-info">
+                  <strong>Error details:</strong> ${error.message}
+                </div>
               </div>
             `;
           }
         },
         choices: ['Repeat Experiment', 'Exit'],
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+        on_finish: function() {
+          jsPsych.getDisplayElement().innerHTML = '';
+        }
       });
       
       return timeline;
@@ -360,10 +462,23 @@
     function runExperiment() {
       jsPsych.run(createTimeline()).then(() => {
         const lastTrialData = jsPsych.data.get().last(1).values()[0];
-        if (lastTrialData.response === 0) {
+        if (lastTrialData && lastTrialData.response === 0) {
           jsPsych.reset(); 
           runExperiment();
         }
+      }).catch(error => {
+        console.error('Experiment error:', error);
+        document.getElementById('jspsych-target').innerHTML = `
+          <div class="card" style="border: 2px solid var(--warning);">
+            <h2 class="error-message">Experiment Failed to Start</h2>
+            <p>${error.message}</p>
+            <p>Please try refreshing the page or contact the researcher.</p>
+            <div class="debug-info">
+              <strong>Error details:</strong><br>
+              ${error.stack || 'No stack trace available'}
+            </div>
+          </div>
+        `;
       });
     }
     
