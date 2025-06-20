@@ -42,7 +42,7 @@
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.15);
       color: #333;
-      max-width: 650px;
+      max-width: 800px;
       margin: 0 auto 25px auto;
     }
     .card h1 {
@@ -106,13 +106,12 @@
     .thank-you {
       color: #007acc;
     }
-    /* Image labels below images in pairwise trials */
-    .image-label {
-      margin-top: 6px;
-      font-weight: bold;
-      color: #444;
-      font-size: 1rem;
-      text-align: center;
+    /* Image containers for side-by-side layout */
+    .image-pair-container {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+      margin: 20px 0;
     }
   </style>
 </head>
@@ -120,6 +119,25 @@
   <div id="jspsych-target"></div>
 
   <script>
+    // Initialize plugins
+    const jsPsych = initJsPsych({
+      display_element: 'jspsych-target',
+      on_error: function(error) {
+        console.error('jsPsych Error:', error);
+        document.getElementById('jspsych-target').innerHTML = `
+          <div class="card" style="border: 2px solid #d9534f;">
+            <h2 class="error-message">Experiment Error</h2>
+            <p>${error.message}</p>
+            <p>Please try refreshing the page or contact the researcher.</p>
+          </div>
+        `;
+      }
+    });
+    
+    const jsPsychHtmlButtonResponse = initJsPsychHtmlButtonResponse();
+    const jsPsychSurveyHtmlForm = initJsPsychSurveyHtmlForm();
+    const jsPsychPreload = initJsPsychPreload();
+
     // --- CONFIG ---
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
@@ -129,22 +147,28 @@
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
     const images = Array.from({ length: 15 }, (_, i) => `${repoBase}images/${i + 1}.png`);
 
-    const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
-
+    // Save data to Google Sheets
     async function saveToGoogleSheets(participantID, trialsData) {
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantID, trials: trialsData })
-      });
-      if (!response.ok) throw new Error("Google Sheets save failed");
-      return response.json();
+      try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participantID, trials: trialsData })
+        });
+        return { success: true };
+      } catch (e) {
+        throw new Error(`Failed to save data: ${e.message}`);
+      }
     }
 
     function createTimeline() {
       const timeline = [];
 
-      timeline.push({ type: jsPsychPreload, images });
+      timeline.push({ 
+        type: jsPsychPreload, 
+        images: images 
+      });
 
       // Welcome
       timeline.push({
@@ -189,10 +213,11 @@
             <p><strong>Choose the image with the more intense shadow.</strong></p>
             <p>You will complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
           </div>`,
-        choices: ['Start Comparing']
+        choices: ['Start Comparing'],
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
-      // Pairwise Trials
+      // Pairwise Trials with Side-by-Side Images
       const selectedPairs = [];
       for (let i = 0; i < images.length; i += 5) {
         const block = images.slice(i, i + 5);
@@ -207,20 +232,14 @@
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div class="card">
-              <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
-                <div style="text-align:center;">
-                  <img src="${pair[0]}" alt="Image A"/>
-                  <div class="image-label">Image A</div>
-                </div>
-                <div style="text-align:center;">
-                  <img src="${pair[1]}" alt="Image B"/>
-                  <div class="image-label">Image B</div>
-                </div>
+              <div class="image-pair-container">
+                <img src="${pair[0]}" alt="Left Image"/>
+                <img src="${pair[1]}" alt="Right Image"/>
               </div>
               <p>Which shadow is more intense?</p>
             </div>
             <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>`,
-          choices: ['Image A', 'Image B'],
+          choices: ['Left Image', 'Right Image'],
           data: {
             phase: 'phase1',
             image_left: pair[0].split('/').pop(),
@@ -242,7 +261,8 @@
             <p>You'll see images with two shadows.</p>
             <p><strong>Indicate if there's a brightness difference.</strong></p>
           </div>`,
-        choices: ['Begin Phase 2']
+        choices: ['Begin Phase 2'],
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
       // Brightness Trials
@@ -273,11 +293,23 @@
         type: jsPsychHtmlButtonResponse,
         stimulus: async () => {
           const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
+          
+          // Validate participant ID
           if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
-            return `<div class="card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
+            return `
+              <div class="card">
+                <h2 class="error-message">Error</h2>
+                <p>Missing or invalid Participant ID</p>
+              </div>`;
           }
+          
+          // Validate CAPTCHA
           if (parseInt(formTrial.response.captcha) !== 7) {
-            return `<div class="card"><h2 class="error-message">Verification Failed</h2><p>Incorrect CAPTCHA</p></div>`;
+            return `
+              <div class="card">
+                <h2 class="error-message">Verification Failed</h2>
+                <p>Incorrect CAPTCHA answer</p>
+              </div>`;
           }
 
           const participantID = formTrial.response.participant_id;
@@ -294,9 +326,20 @@
 
           try {
             await saveToGoogleSheets(participantID, trialsData);
-            return `<div class="card thank-you"><h2>Thank You!</h2><p>Responses saved successfully.</p></div>`;
+            return `
+              <div class="card thank-you">
+                <h2>Thank You!</h2>
+                <p>Your responses have been successfully saved.</p>
+                <p>We appreciate your participation in this study.</p>
+                <p>If you want to repeat the experiment, press the button below.</p>
+              </div>`;
           } catch (e) {
-            return `<div class="card"><h2 class="error-message">Error</h2><p>Failed to save data: ${e.message}</p></div>`;
+            return `
+              <div class="card">
+                <h2 class="error-message">Error</h2>
+                <p>Failed to save data: ${e.message}</p>
+                <p>Your Participant ID: ${participantID}</p>
+              </div>`;
           }
         },
         choices: ['Repeat Experiment', 'Exit'],
@@ -309,7 +352,7 @@
     function runExperiment() {
       jsPsych.run(createTimeline()).then(() => {
         const lastTrialData = jsPsych.data.get().last(1).values()[0];
-        if (lastTrialData.response === 0) {
+        if (lastTrialData && lastTrialData.response === 0) {
           jsPsych.reset();
           runExperiment();
         }
