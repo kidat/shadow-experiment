@@ -201,37 +201,33 @@
         }
       }
 
-      selectedPairs.forEach((pair, index) => {
-        const progress = ((index + 1) / selectedPairs.length * 100).toFixed(0);
+      // Phase 1 trials: Add comparison trials
+      selectedPairs.forEach(pair => {
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
-            <div class="card">
-              <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
-                <div style="text-align:center;">
-                  <img src="${pair[0]}" alt="Image A"/>
-                  <div class="image-label">Image A</div>
-                </div>
-                <div style="text-align:center;">
-                  <img src="${pair[1]}" alt="Image B"/>
-                  <div class="image-label">Image B</div>
-                </div>
-              </div>
-              <p>Which shadow is more intense?</p>
+            <div style="display: flex; justify-content: center; gap: 50px;">
+              <img src="${pair[0]}" alt="Left Image" />
+              <img src="${pair[1]}" alt="Right Image" />
             </div>
-            <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>`,
-          choices: ['Image A', 'Image B'],
+            <p>Which shadow appears more intense?</p>
+          `,
+          choices: ['Left Image', 'Right Image'],
           data: {
             phase: 'phase1',
             image_left: pair[0].split('/').pop(),
             image_right: pair[1].split('/').pop()
           },
+          post_trial_gap: 500,
           on_finish: (data) => {
-            data.chosen_image = data.response === 0 ? data.image_left : data.image_right;
+            data.chosen_image = data.response === 0
+              ? pair[0].split('/').pop()
+              : pair[1].split('/').pop();
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
       });
+
 
       // Phase 2 Instruction
       timeline.push({
