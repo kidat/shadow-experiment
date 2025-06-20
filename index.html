@@ -115,7 +115,7 @@
         choices: ['Begin']
       });
 
-      // ID & CAPTCHA
+      // ID 
       timeline.push({
         type: jsPsychSurveyHtmlForm,
         preamble: '<div class="card"><h3>Participant ID</h3><p>Enter your 4-digit ID</p></div>',
@@ -136,7 +136,7 @@
           <div class="card">
             <h2>Phase 1: Pairwise Comparison</h2>
             <p>You will see two images side by side.</p>
-            <p><strong>Choose the image with the more intense shadow.</strong></p>
+            <p><strong>Choose the image with the brighter shadow</strong></p>
             <p>You will complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
           </div>`,
         choices: ['Start Comparing']
@@ -178,16 +178,13 @@
         });
       });
 
-
-      // Phase 2 Instruction
-     
       // Instructions Phase 2
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <h2>Phase 2: Shadow Brightness Comparison</h2>
           <p>Now, please look at the image below which contains two shadows created by spheres.</p>
-          <p>Press "Yes" if you see a brightness difference between the shadows, or "No" if there is no difference or if you are unsure.</p>
+          <p>Press "Yes" if you see a brightness difference between the two shadows, or "No" if there is no difference or if you are unsure.</p>
         `,
         choices: ['Begin Phase 2'],
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
@@ -212,7 +209,6 @@
         on_finish: (data) => {
           data.chosen_image_phase2 = data.image;   // <-- first
           data.brightness_difference = data.response === 0 ? 'yes' : 'no';  // <-- second
-          jsPsych.getDisplayElement().innerHTML = '';
         }
       });
     });
