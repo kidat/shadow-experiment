@@ -68,6 +68,7 @@
     }
   </style>
   
+  
 </head>
 <body>
   <div id="jspsych-target"></div>
@@ -100,6 +101,7 @@
       timeline.push({ type: jsPsychPreload, images });
 
       // Welcome
+
       timeline.push({
       type: jsPsychHtmlButtonResponse,
       stimulus: `
@@ -107,16 +109,13 @@
           <h1>Shadow Color Perception Experiment</h1>
           <p>Thank you for participating in this color perception study.</p>
           <p>This experiment has two phases:</p>
-          <ol>
-            <li>Pairwise comparison of shadow brightness</li>
-            <li>Brightness difference detection</li>
-          </ol>
+          <p><strong>Phase 1:</strong> Pairwise comparison of shadow brightness</p>
+          <p><strong>Phase 2:</strong> Brightness difference detection</p>
           <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
         </div>`,
       choices: ['Begin']
     });
-
-
+      
       // ID 
       timeline.push({
         type: jsPsychSurveyHtmlForm,
