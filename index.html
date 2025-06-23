@@ -302,54 +302,69 @@
 
       // Final Screen + Save to Google Sheets
       timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: async () => {
-          const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
-          if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
-            return `<div class="welcome-card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
-          }
-
-          const participantID = formTrial.response.participant_id;
-          const trialsData = jsPsych.data.get().filter(trial => trial.phase).values().map(trial => ({
-            phase: trial.phase,
-            image_left: trial.image_left || '',
-            image_right: trial.image_right || '',
-            chosen_image: trial.chosen_image || '',
-            image: trial.image || '',
-            brightness_difference: trial.brightness_difference || '',
-            response: trial.response,
-            rt: trial.rt
-          }));
-
+        type: jsPsychCallFunction,
+        async: true,              // allows using await inside the function
+        func: async () => {
+          // grab ID & data as before
+          const form = jsPsych.data.get()
+            .filter({ trial_type: 'survey-html-form' })
+            .values()[0];
+          const participantID = form.response.participant_id;
+          const trials = jsPsych.data.get()
+            .filter(trial => trial.phase)
+            .values()
+            .map(trial => ({
+              phase: trial.phase,
+              image_left: trial.image_left || '',
+              image_right: trial.image_right || '',
+              chosen_image: trial.chosen_image || '',
+              image: trial.image || '',
+              response: trial.response,
+              rt: trial.rt
+            }));
+          // actually save
+          let saveResult;
           try {
-            const saveResult = await saveToGoogleSheets(participantID, trialsData);
+            saveResult = await saveToGoogleSheets(participantID, trials);
+          } catch (e) {
+            saveResult = { success: false, message: e.message };
+          }
+          // stash the result in jsPsych’s data store
+          jsPsych.data.addProperties({ saveResult, participantID });
+        }
+      });
+      
+      // 2) Then push a *normal* html‐button‐response that reads that result:
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: () => {
+          const { saveResult, participantID } = jsPsych.data.get().values()[0];
+          if (saveResult.success) {
             return `
               <div class="welcome-card">
                 <h2>Thank You!</h2>
                 <p>Responses saved successfully for participant ${participantID}.</p>
                 <p>You may now close this window.</p>
-              </div>
-            `;
-          } catch (e) {
+              </div>`;
+          } else {
             return `
               <div class="welcome-card">
                 <h2 class="error-message">Data Save Error</h2>
-                <p>${e.message}</p>
+                <p>${saveResult.message}</p>
                 <p>Please contact the researcher with your participant ID: ${participantID}</p>
                 <p>We'll save your data locally as a backup.</p>
-              </div>
-            `;
+              </div>`;
           }
         },
-        choices: ['Repeat Experiment', 'Exit'],
-        on_finish: (data) => {
-          jsPsych.getDisplayElement().innerHTML = '';
-          if (data.response === 0) {  // Repeat Experiment
+        choices: ['Repeat Experiment','Exit'],
+        on_finish: data => {
+          if (data.response === 0) {
             jsPsych.endExperiment('', true);
             runExperiment();
           }
         }
       });
+
 
       return timeline;
     }
