@@ -286,7 +286,7 @@
             <div style="display: flex; justify-content: center;">
               <img src="${img}" />
             </div>
-            <p>Which shadow looks more intense?</p>
+            <p>Which shadow looks brighter?</p>
           `,
           choices: ['Left Shadow', 'Same', 'Right Shadow'],
           data: { phase: 'phase3', image: img.split('/').pop() },
@@ -301,14 +301,19 @@
       });
 
       // Final Screen + Save to Google Sheets
+      let finalMessage = '';
+      
+      // Trial to save data to Google Sheets
       timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: async () => {
+        type: 'call-function',
+        async: true,
+        func: async () => {
           const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
           if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
-            return `<div class="welcome-card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
+            finalMessage = `<div class="welcome-card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
+            return;
           }
-
+      
           const participantID = formTrial.response.participant_id;
           const trialsData = jsPsych.data.get().filter(trial => trial.phase).values().map(trial => ({
             phase: trial.phase,
@@ -320,10 +325,10 @@
             response: trial.response,
             rt: trial.rt
           }));
-
+      
           try {
-            const saveResult = await saveToGoogleSheets(participantID, trialsData);
-            return `
+            await saveToGoogleSheets(participantID, trialsData);
+            finalMessage = `
               <div class="welcome-card">
                 <h2>Thank You!</h2>
                 <p>Responses saved successfully for participant ${participantID}.</p>
@@ -331,7 +336,7 @@
               </div>
             `;
           } catch (e) {
-            return `
+            finalMessage = `
               <div class="welcome-card">
                 <h2 class="error-message">Data Save Error</h2>
                 <p>${e.message}</p>
@@ -340,7 +345,13 @@
               </div>
             `;
           }
-        },
+        }
+      });
+      
+      // Final screen showing the save result message
+      timeline.push({
+        type: 'html-button-response',
+        stimulus: () => finalMessage,
         choices: ['Repeat Experiment', 'Exit'],
         on_finish: (data) => {
           jsPsych.getDisplayElement().innerHTML = '';
@@ -350,7 +361,7 @@
           }
         }
       });
-
+      
       return timeline;
     }
 
