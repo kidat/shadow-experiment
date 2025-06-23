@@ -119,30 +119,33 @@
     const images = Array.from({ length: 15 }, (_, i) => `${repoBase}images/${i + 1}.png`);
 
     const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
-
-    // Enhanced save function with better error handling
-    async function saveToGoogleSheets(participantID, trialsData) {
-      try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ participantID, trials: trialsData }),
-          // Required for Google Apps Script to work properly
-          redirect: "follow",
-          mode: "no-cors"
-        });
-        
-        
-        if (!response.ok) {
-          throw new Error(`Server responded with status ${response.status}`);
-        }
-        
+    
+  // Enhanced save function that treats no-CORS opaque responses as success
+  async function saveToGoogleSheets(participantID, trialsData) {
+    try {
+      const response = await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantID, trials: trialsData }),
+        redirect: "follow",
+        mode: "no-cors"
+      });
+  
+      // In no-cors mode, response.type==='opaque' (status=0, ok=false).
+      // Treat opaque OR ok===true as a successful save.
+      if (response.type === 'opaque' || response.ok) {
         return { success: true, message: "Data submitted successfully" };
-      } catch (e) {
-        console.error("Save error:", e);
-        throw new Error(`Failed to save data: ${e.message}`);
+      } else {
+        throw new Error(`Server responded with status ${response.status}`);
       }
+    } catch (e) {
+      console.error("Save error:", e);
+      // Return a failure object rather than re-throwing,
+      // so your call-function trial always completes gracefully.
+      return { success: false, message: e.message };
     }
+  }
+
 
     function createTimeline() {
       const timeline = [];
