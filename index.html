@@ -343,19 +343,19 @@
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: () => {
-          // **grab the call-function trial**, not the first row**
+          // grab the very last trial (it has saveResult & participantID)
           const callData = jsPsych.data.get()
-            .filter({ trial_type: 'call-function' })  // or 'call-function' if you registered it by string
+            .last(1)
             .values()[0];
-      
-          if (!callData) {
+        
+          if (!callData || callData.saveResult == null) {
             return `
               <div class="welcome-card">
                 <h2 class="error-message">Internal Error</h2>
                 <p>Could not retrieve save result.</p>
               </div>`;
           }
-      
+        
           const { saveResult, participantID } = callData;
           if (saveResult.success) {
             return `
@@ -374,6 +374,7 @@
               </div>`;
           }
         },
+
         choices: ['Repeat Experiment','Exit'],
         on_finish: data => {
           if (data.response === 0) {
@@ -382,7 +383,6 @@
           }
         }
       });
-
 
       return timeline;
     }
