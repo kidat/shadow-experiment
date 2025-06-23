@@ -227,13 +227,15 @@
         });
       });
 
+     // Phase 2 Instruction
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
-          <h2>Phase 2: Assessment of Shadow Color Differences </h2>
-          <p>You will now again see two images side by side.</p>
-          <p><strong> Do you see a color difference between the shadows of each pair?</strong></p>
-        `,
+          <div class="welcome-card">
+            <h2>Phase 2: Color Difference</h2>
+            <p>Again, you’ll see image pairs.</p>
+            <p><strong>Decide if the shadows appear to differ in color.</strong></p>
+          </div>`,
         choices: ['Start Phase 2'],
         data: { phase: 'phase2_instructions' },
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
@@ -263,17 +265,19 @@
         });
       });
 
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `
-          <h2>Phase 3: Assessment of Shadow Brightness Differences </h2>
-          <p>Now, please look at the image below which contains two shadows created by spheres.</p>
-          <p>Choose which shadow looks more intense or if they appear the same.</p>
-        `,
-        choices: ['Begin Phase 3'],
-        data: { phase: 'phase3_instructions' },
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
-      });
+    // Phase 3 Instruction
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+        <div class="welcome-card">
+          <h2>Phase 3: Shadow Intensity</h2>
+          <p>You'll see single images with two shadows.</p>
+          <p><strong>Choose which shadow looks brighter."</strong></p>
+        </div>`,
+      choices: ['Begin Phase 3'],
+      data: { phase: 'phase3_instructions' },
+      on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+    });
 
       images.forEach(img => {
         timeline.push({
