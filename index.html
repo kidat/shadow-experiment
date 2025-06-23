@@ -297,49 +297,52 @@
         }
       });
 
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: () => {
-          const allData = jsPsych.data.get().values();
-          const globalData = allData.find(d => d.saveResult !== undefined);
+timeline.push({
+  type: jsPsychHtmlButtonResponse,
+  stimulus: () => {
+    const allData = jsPsych.data.get().values();
+    const globalData = allData.find(d => d.saveResult !== undefined);
 
-          if (!globalData || !globalData.saveResult) {
-            return `
-              <div class="welcome-card">
-                <h2 class="error-message">Internal Error</h2>
-                <p>Could not retrieve save result.</p>
-              </div>`;
-          }
+    if (!globalData || !globalData.saveResult) {
+      return `
+        <div class="welcome-card">
+          <h2 class="error-message">Internal Error</h2>
+          <p>Could not retrieve save result.</p>
+        </div>`;
+    }
 
-          const { saveResult, participantID } = globalData;
+    const { saveResult, participantID } = globalData;
 
-          if (saveResult.success) {
-            return `
-              <div class="welcome-card">
-                <h2>Thank You!</h2>
-                <p>Responses saved successfully for participant ${participantID}.</p>
-                <p>You may now close this window.</p>
-              </div>`;
-          } else {
-            return `
-              <div class="welcome-card">
-                <h2 class="error-message">Data Save Error</h2>
-                <p>${saveResult.message}</p>
-                <p>Please contact the researcher with your participant ID: ${participantID}</p>
-                <p>We'll save your data locally as a backup.</p>
-              </div>`;
-          }
-        },
-        choices: ['Repeat Experiment', 'Exit'],
-        on_finish: data => {
-          if (data.response === 0) {
-            jsPsych.endExperiment('Restarting experiment...', false);
-            setTimeout(() => runExperiment(), 1000);
-          } else {
-            jsPsych.endExperiment('Thank you for participating!');
-          }
-        }
-      });
+    if (saveResult.success) {
+      return `
+        <div class="welcome-card">
+          <h2>Thank You!</h2>
+          <p>Responses saved successfully for participant ${participantID}.</p>
+          <p>You may now close this window or restart the experiment.</p>
+        </div>`;
+    } else {
+      return `
+        <div class="welcome-card">
+          <h2 class="error-message">Data Save Error</h2>
+          <p>${saveResult.message}</p>
+          <p>Please contact the researcher with your participant ID: ${participantID}</p>
+          <p>We'll save your data locally as a backup.</p>
+        </div>`;
+    }
+  },
+  choices: ['Repeat Experiment', 'Exit'],
+  on_finish: data => {
+    if (data.response === 0) {
+      // Clear jsPsych data and reset the display before restarting
+      jsPsych.data.clear();
+      jsPsych.getDisplayElement().innerHTML = '';
+      runExperiment();
+    } else {
+      jsPsych.endExperiment('Thank you for participating!');
+    }
+  }
+});
+
 
       return timeline;
     }
