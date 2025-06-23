@@ -87,36 +87,50 @@
 
   <script>
     // --- CONFIG ---
-    const GITHUB_USERNAME = "kidat";
+     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
     const IMAGES_BRANCH = "main";
-    // Use the correct Google Apps Script URL format
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlQHpA88-44cWBXnIlm1qnwObR-KPLtGWErvNQOJytMg-BLZzN4vtUAopcVrWWWGve3Q/exec";
+    // Updated to use EXEC endpoint (not DEV)
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNxxd274gfXzByiHZ0ffq4VUM-ojrwFeCegFvvU4uem4pJM_pGyuByxqCNQhSmaQ0BSA/exec";
 
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
     const images = Array.from({ length: 15 }, (_, i) => `${repoBase}images/${i + 1}.png`);
 
-    const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
+    const jsPsych = initJsPsych({ 
+      display_element: 'jspsych-target',
+      on_finish: () => {
+        document.body.style.backgroundColor = "#f0f0f0";
+      }
+    });
 
     // Enhanced save function with better error handling
     async function saveToGoogleSheets(participantID, trialsData) {
-  try {
-    const response = await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participantID, trials: trialsData })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Server responded with status ${response.status}`);
+      try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participantID, trials: trialsData })
+        });
+        
+        // Handle HTTP errors
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Server error ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        
+        // Handle Google Script errors
+        if (!result.success) {
+          throw new Error(result.error || "Unknown server error");
+        }
+        
+        return result;
+      } catch (e) {
+        console.error("Save error:", e);
+        throw new Error(`Failed to save data: ${e.message}`);
+      }
     }
-    
-    return await response.json();
-  } catch (e) {
-    console.error("Save error:", e);
-    throw new Error(`Failed to save data: ${e.message}`);
-  }
-}
 
     function createTimeline() {
       const timeline = [];
@@ -130,9 +144,10 @@
           <div class="welcome-card">
             <h1>Shadow Color Perception Experiment</h1>
             <p>Thank you for participating in this color perception study.</p>
-            <p>This experiment has two phases:</p>
+            <p>This experiment has three phases:</p>
             <p><strong>Phase 1:</strong> Pairwise comparison of shadow brightness</p>
             <p><strong>Phase 2:</strong> Brightness difference detection</p>
+            <p><strong>Phase 3:</strong> Shadow brightness comparison</p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
           </div>`,
         choices: ['Begin']
@@ -159,10 +174,9 @@
             <h2>Phase 1: Pairwise Comparison</h2>
             <p>You will see two images side by side.</p>
             <p><strong>Choose the image with the brighter shadow</strong></p>
-            <p>You will complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
           </div>`,
         choices: ['Start Comparing'],
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = '' // ✅ clear screen after instruction
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
       // Pairwise Trials
@@ -179,7 +193,7 @@
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
+            <div style="display: flex; justify-content: center; gap: 50px; margin: 20px 0;">
               <img src="${pair[0]}" />
               <img src="${pair[1]}" />
             </div>
@@ -191,15 +205,10 @@
             image_left: pair[0].split('/').pop(),
             image_right: pair[1].split('/').pop()
           },
-          post_trial_gap: 500,
+          post_trial_gap: 300,
           on_finish: data => {
             const labels = ['left', 'same', 'right'];
             data.response = labels[data.response];
-            data.chosen_image = data.response === 'left'
-              ? data.image_left
-              : data.response === 'right'
-              ? data.image_right
-              : 'same';
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -208,12 +217,12 @@
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
-          <h2>Phase 2: Color Difference Judgment</h2>
-          <p>You will now again see two images side by side.</p>
-          <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
-        `,
+          <div class="welcome-card">
+            <h2>Phase 2: Color Difference Judgment</h2>
+            <p>You will now see the same pairs of images again.</p>
+            <p><strong>Do you see a color difference between the shadows in each pair?</strong></p>
+          </div>`,
         choices: ['Start Phase 2'],
-        data: { phase: 'phase2_instructions' },
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
@@ -221,7 +230,7 @@
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
+            <div style="display: flex; justify-content: center; gap: 50px; margin: 20px 0;">
               <img src="${pair[0]}" />
               <img src="${pair[1]}" />
             </div>
@@ -233,7 +242,7 @@
             image_left: pair[0].split('/').pop(),
             image_right: pair[1].split('/').pop()
           },
-          post_trial_gap: 500,
+          post_trial_gap: 300,
           on_finish: data => {
             data.response = data.response === 0 ? 'yes' : 'no';
             jsPsych.getDisplayElement().innerHTML = '';
@@ -244,12 +253,12 @@
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
-          <h2>Phase 3: Shadow Brightness Comparison</h2>
-          <p>Now, please look at the image below which contains two shadows created by spheres.</p>
-          <p>Choose which shadow looks more intense or if they appear the same.</p>
-        `,
+          <div class="welcome-card">
+            <h2>Phase 3: Shadow Brightness Comparison</h2>
+            <p>Now, please look at images containing two shadows created by spheres.</p>
+            <p>Choose which shadow looks more intense or if they appear the same.</p>
+          </div>`,
         choices: ['Begin Phase 3'],
-        data: { phase: 'phase3_instructions' },
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
@@ -257,18 +266,17 @@
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
-            <div style="display: flex; justify-content: center;">
+            <div style="display: flex; justify-content: center; margin: 20px 0;">
               <img src="${img}" />
             </div>
             <p>Which shadow looks more intense?</p>
           `,
           choices: ['Left Shadow', 'Same', 'Right Shadow'],
           data: { phase: 'phase3', image: img.split('/').pop() },
-          post_trial_gap: 500,
+          post_trial_gap: 300,
           on_finish: data => {
             const labels = ['left', 'same', 'right'];
             data.response = labels[data.response];
-            data.chosen_shadow = data.response;
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -278,19 +286,18 @@
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: async () => {
-          const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
-          if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
+          const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).last(1).values()[0];
+          const participantID = formTrial?.response?.participant_id;
+          
+          if (!participantID || !/^\d{4}$/.test(participantID)) {
             return `<div class="welcome-card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
           }
 
-          const participantID = formTrial.response.participant_id;
           const trialsData = jsPsych.data.get().filter(trial => trial.phase).values().map(trial => ({
             phase: trial.phase,
             image_left: trial.image_left || '',
             image_right: trial.image_right || '',
-            chosen_image: trial.chosen_image || '',
             image: trial.image || '',
-            brightness_difference: trial.brightness_difference || '',
             response: trial.response,
             rt: trial.rt
           }));
@@ -301,27 +308,30 @@
               <div class="welcome-card">
                 <h2>Thank You!</h2>
                 <p>Responses saved successfully for participant ${participantID}.</p>
+                <p>${saveResult.message}</p>
                 <p>You may now close this window.</p>
               </div>
             `;
           } catch (e) {
+            // Save data to localStorage as backup
+            localStorage.setItem(`shadow_data_${participantID}`, JSON.stringify({
+              participantID,
+              trials: trialsData
+            }));
+            
             return `
               <div class="welcome-card">
                 <h2 class="error-message">Data Save Error</h2>
                 <p>${e.message}</p>
+                <p>Your data has been saved locally as a backup.</p>
                 <p>Please contact the researcher with your participant ID: ${participantID}</p>
-                <p>We'll save your data locally as a backup.</p>
               </div>
             `;
           }
         },
-        choices: ['Repeat Experiment', 'Exit'],
-        on_finish: (data) => {
+        choices: ['Exit'],
+        on_finish: () => {
           jsPsych.getDisplayElement().innerHTML = '';
-          if (data.response === 0) {  // Repeat Experiment
-            jsPsych.endExperiment('', true);
-            runExperiment();
-          }
         }
       });
 
