@@ -10,17 +10,17 @@
   <script src="https://unpkg.com/@jspsych/plugin-call-function"></script>
   <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
 
-
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #808080;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
       margin: 0;
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      padding-top: 40px;
+      padding-top: 20px;
       min-height: 100vh;
+      color: #fff;
     }
     #jspsych-target {
       width: 100%;
@@ -31,136 +31,334 @@
     }
     img {
       max-height: 450px;
-      max-width: 50vw;
+      max-width: 45vw;
       height: auto;
       width: auto;
       object-fit: contain;
-      border: 2px solid #333;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      border: 3px solid #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+      transition: transform 0.3s ease;
+    }
+    img:hover {
+      transform: scale(1.02);
     }
     .welcome-card {
-      background: #f0f0f0;
+      background: rgba(255, 255, 255, 0.92);
       padding: 40px 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.2);
       color: #333;
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto;
+      backdrop-filter: blur(10px);
     }
     .welcome-card h1 {
-      font-size: 2.2rem;
+      font-size: 2.4rem;
+      margin-bottom: 20px;
+      color: #1a237e;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    .welcome-card h2 {
+      color: #283593;
+      margin-top: 25px;
       margin-bottom: 15px;
-      color: #222;
     }
     .welcome-card p {
-      font-size: 1.1rem;
-      line-height: 1.5;
-      margin-bottom: 20px;
+      font-size: 1.15rem;
+      line-height: 1.6;
+      margin-bottom: 25px;
     }
     .jspsych-btn {
-      font-size: 1.1rem !important;
-      padding: 12px 30px !important;
-      border-radius: 8px !important;
-      background-color: #007acc !important;
+      font-size: 1.15rem !important;
+      padding: 14px 35px !important;
+      border-radius: 12px !important;
+      background: linear-gradient(to right, #2962ff, #0039cb) !important;
       color: white !important;
       border: none !important;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: all 0.3s ease;
       margin: 0 15px !important;
+      box-shadow: 0 4px 8px rgba(41, 98, 255, 0.3);
     }
     .jspsych-btn:hover {
-      background-color: #005fa3 !important;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(41, 98, 255, 0.4);
+    }
+    .jspsych-btn:active {
+      transform: translateY(0);
     }
     .error-message {
       color: #d32f2f;
       font-weight: bold;
+      font-size: 1.1rem;
     }
     .success-message {
       color: #2e7d32;
       font-weight: bold;
+      font-size: 1.1rem;
     }
     .progress-container {
       width: 100%;
-      max-width: 600px;
-      margin: 20px auto;
-      background: #e0e0e0;
+      max-width: 700px;
+      margin: 30px auto;
+      background: rgba(255, 255, 255, 0.3);
       border-radius: 10px;
-      height: 15px;
+      height: 20px;
       overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
     }
     .progress-bar {
       height: 100%;
-      background: #4CAF50;
+      background: linear-gradient(90deg, #4CAF50, #8BC34A);
       border-radius: 10px;
-      transition: width 0.3s ease;
+      transition: width 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
     }
     .phase-indicator {
       font-weight: bold;
-      margin: 10px 0;
+      margin: 15px 0;
+      font-size: 1.3rem;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      letter-spacing: 0.5px;
+    }
+    .trial-counter {
+      color: #e3f2fd;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .form-group {
+      margin: 25px 0;
+    }
+    .form-group input {
+      width: 200px;
+      padding: 14px 20px;
       font-size: 1.2rem;
-      color: #333;
+      border-radius: 10px;
+      border: 2px solid #bbdefb;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #2962ff;
+      box-shadow: 0 0 10px rgba(41, 98, 255, 0.3);
+    }
+    .image-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 30px 0;
+    }
+    .question-text {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 25px 0;
+      color: #0d47a1;
+      text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+    }
+    .highlight {
+      background: linear-gradient(120deg, #e1f5fe, #bbdefb);
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-weight: 600;
+    }
+    .debrief-section {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 30px;
+      border-radius: 15px;
+      margin: 30px 0;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .debrief-section h3 {
+      color: #1a237e;
+      border-bottom: 2px solid #bbdefb;
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+    .debrief-section ul {
+      padding-left: 25px;
+    }
+    .debrief-section li {
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .footer {
+      margin-top: 30px;
+      color: #e3f2fd;
+      font-size: 0.9rem;
+    }
+    .response-feedback {
+      font-size: 1.1rem;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.85);
+      max-width: 500px;
+      margin: 20px auto;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #f00;
+      border-radius: 50%;
+      opacity: 0.7;
+      animation: fall linear forwards;
+    }
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
     }
   </style>
 </head>
 <body>
   <div id="jspsych-target"></div>
+  <div class="progress-container" style="display: none;">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+  <div class="phase-indicator" id="phase-indicator" style="display: none;"></div>
+  <div class="trial-counter" id="trial-counter" style="display: none;"></div>
 
   <script>
-
     // --- CONFIG ---
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
     const IMAGES_BRANCH = "main";
-    // Use the correct Google Apps Script URL format
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYYfej-4FG59R2Bah_LKwnIpTYmLA2DiBdEyIJInMTWM4TGL9ODcXr5eGBOueXsEcNYg/exec";
 
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
     const images = Array.from({ length: 15 }, (_, i) => `${repoBase}images/${i + 1}.png`);
 
-    const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
-    
-  // Enhanced save function that treats no-CORS opaque responses as success
-  async function saveToGoogleSheets(participantID, trialsData) {
-    try {
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantID, trials: trialsData }),
-        redirect: "follow",
-        mode: "no-cors"
-      });
-  
-      // In no-cors mode, response.type==='opaque' (status=0, ok=false).
-      // Treat opaque OR ok===true as a successful save.
-      if (response.type === 'opaque' || response.ok) {
-        return { success: true, message: "Data submitted successfully" };
-      } else {
-        throw new Error(`Server responded with status ${response.status}`);
+    const jsPsych = initJsPsych({ 
+      display_element: 'jspsych-target',
+      on_timeline_finish: function() {
+        document.querySelector('.progress-container').style.display = 'none';
+        document.getElementById('phase-indicator').style.display = 'none';
+        document.getElementById('trial-counter').style.display = 'none';
       }
-    } catch (e) {
-      console.error("Save error:", e);
-      // Return a failure object rather than re-throwing,
-      // so your call-function trial always completes gracefully.
-      return { success: false, message: e.message };
-    }
-  }
+    });
 
+    // Global variables to store save status
+    let saveResult = null;
+    let participantID = null;
+
+    // Enhanced save function
+    async function saveToGoogleSheets(pid, trialsData) {
+      try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participantID: pid, trials: trialsData }),
+          redirect: "follow",
+          mode: "no-cors"
+        });
+    
+        // Treat opaque OR ok===true as a successful save
+        if (response.type === 'opaque' || response.ok) {
+          return { success: true, message: "Data submitted successfully" };
+        } else {
+          throw new Error(`Server responded with status ${response.status}`);
+        }
+      } catch (e) {
+        console.error("Save error:", e);
+        return { success: false, message: e.message };
+      }
+    }
+
+    // Function to update progress bar
+    function updateProgressBar(currentTrial, totalTrials, phaseName) {
+      const progressBar = document.getElementById('progress-bar');
+      const phaseIndicator = document.getElementById('phase-indicator');
+      const trialCounter = document.getElementById('trial-counter');
+      
+      // Show elements
+      document.querySelector('.progress-container').style.display = 'block';
+      phaseIndicator.style.display = 'block';
+      trialCounter.style.display = 'block';
+      
+      // Calculate progress
+      const percent = Math.round((currentTrial / totalTrials) * 100);
+      progressBar.style.width = `${percent}%`;
+      
+      // Update text
+      phaseIndicator.textContent = `Current Phase: ${phaseName}`;
+      trialCounter.textContent = `Trial ${currentTrial} of ${totalTrials} (${percent}%)`;
+    }
+
+    // Function to create randomized pairs
+    function createRandomizedPairs() {
+      const pairs = [];
+      
+      // Create consecutive pairs
+      for (let i = 0; i < images.length; i += 5) {
+        const block = images.slice(i, i + 5);
+        for (let j = 0; j < block.length - 1; j++) {
+          pairs.push([block[j], block[j+1]]);
+        }
+      }
+      
+      // Randomize order of pairs
+      jsPsych.randomization.shuffle(pairs);
+      
+      // Randomize left/right position for each pair
+      return pairs.map(pair => 
+        Math.random() < 0.5 ? pair : [pair[1], pair[0]]
+      );
+    }
+
+    // Function to create confetti effect
+    function createConfetti() {
+      const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+      const container = document.getElementById('jspsych-target');
+      
+      for (let i = 0; i < 150; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = `${Math.random() * 100}%`;
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.width = `${Math.random() * 10 + 5}px`;
+        confetti.style.height = confetti.style.width;
+        confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+        container.appendChild(confetti);
+        
+        // Remove confetti after animation completes
+        setTimeout(() => {
+          confetti.remove();
+        }, 5000);
+      }
+    }
 
     function createTimeline() {
       const timeline = [];
+      let trialCounter = 0;
+      const totalTrials = Math.floor(images.length / 5) * 4 * 2 + images.length; // Phase1 + Phase2 + Phase3
 
-      timeline.push({ type: jsPsychPreload, images });
+      // Preload images with loading screen
+      timeline.push({
+        type: jsPsychPreload,
+        images: images,
+        message: '<div style="font-size: 1.3rem; margin-bottom: 20px;">Loading experiment assets...</div>',
+        show_progress_bar: true,
+        continue_after_error: true
+      });
 
-    
       // Welcome screen
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="welcome-card">
-            <h1>Shadow Color Perception Experiment</h1>
-            <p>Thank you for participating in this color perception study.</p>
-            <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
+            <h1>🔮 Shadow Color Perception Experiment</h1>
+            <p>Welcome to our study on visual perception of shadows! This experiment explores how humans perceive differences in shadow brightness and color.</p>
+            <p>You'll participate in three phases where you'll compare shadows in various images. The entire experiment takes about 10-15 minutes.</p>
+            <p>Your participation will contribute to our understanding of visual perception and help advance research in cognitive psychology.</p>
+            <p>Click <strong>"Begin"</strong> when you're ready to start.</p>
           </div>`,
         choices: ['Begin']
       });
@@ -168,14 +366,18 @@
       // ID collection
       timeline.push({
         type: jsPsychSurveyHtmlForm,
-        preamble: '<div class="welcome-card"><h3>Participant ID</h3><p>Enter your 4-digit ID</p></div>',
+        preamble: `
+          <div class="welcome-card">
+            <h2>Participant Identification</h2>
+            <p>Please enter the 4-digit ID provided to you</p>
+          </div>`,
         html: `
           <div class="form-group">
             <input name="participant_id" type="text" pattern="\\d{4}" maxlength="4" required 
                    placeholder="Enter 4-digit ID" autocomplete="off" />
+            <p class="response-feedback">This ID ensures your data is recorded correctly and anonymously</p>
           </div>`,
-        button_label: 'Continue',
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+        button_label: 'Continue'
       });
 
       // Phase 1 Instruction
@@ -183,42 +385,47 @@
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="welcome-card">
-            <h2>Phase 1: Assessment of Shadow Brightness Differences</h2>
-            <p>You will see two images side by side.</p>
-            <p><strong>Choose the image with the brighter shadow</strong></p>
-            <p>You will complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
+            <h2>Phase 1: Shadow Brightness Differences</h2>
+            <p>In this phase, you'll see pairs of images side by side.</p>
+            <p><span class="highlight">Your task is to select the image with the brighter shadow</span></p>
+            <p>You'll complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
+            <p>Please respond as naturally as possible - there are no right or wrong answers.</p>
           </div>`,
-        choices: ['Start Comparing'],
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = '' 
+        choices: ['Start Phase 1'],
+        on_load: function() {
+          document.querySelector('.progress-container').style.display = 'none';
+          document.getElementById('phase-indicator').style.display = 'none';
+          document.getElementById('trial-counter').style.display = 'none';
+        }
       });
 
-      // Pairwise Trials
-      const selectedPairs = [];
-      for (let i = 0; i < images.length; i += 5) {
-        const block = images.slice(i, i + 5);
-        for (let j = 0; j < block.length - 1; j++) {
-          selectedPairs.push([block[j], block[j + 1]]);
-        }
-      }
+      // Create randomized pairs for Phase 1 and 2
+      const randomizedPairs = createRandomizedPairs();
 
       // Phase 1 trials
-      selectedPairs.forEach(pair => {
+      randomizedPairs.forEach((pair, idx) => {
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
+            <div class="image-container">
+              <img src="${pair[0]}" alt="Left image" />
+              <img src="${pair[1]}" alt="Right image" />
             </div>
-            <p>Which shadow appears brighter?</p>
+            <div class="question-text">Which shadow appears brighter?</div>
           `,
-          choices: ['Left Shadow', 'Same', 'Right Shadow'],
+          choices: ['Left Shadow', 'Same Brightness', 'Right Shadow'],
           data: {
             phase: 'phase1',
             image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
+            image_right: pair[1].split('/').pop(),
+            trial_index: idx + 1,
+            total_trials: randomizedPairs.length
           },
-          post_trial_gap: 500,
+          on_start: function() {
+            trialCounter++;
+            updateProgressBar(trialCounter, totalTrials, "Shadow Brightness");
+          },
+          post_trial_gap: 300,
           on_finish: data => {
             const labels = ['left', 'same', 'right'];
             data.response = labels[data.response];
@@ -227,94 +434,121 @@
               : data.response === 'right'
               ? data.image_right
               : 'same';
-            jsPsych.getDisplayElement().innerHTML = '';
           }
         });
       });
 
-     // Phase 2 Instruction
+      // Phase 2 Instruction
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="welcome-card">
-            <h2>Phase 2: Color Difference</h2>
-            <p>Again, you’ll see image pairs.</p>
-            <p><strong>Decide if the shadows appear to differ in color.</strong></p>
+            <h2>Phase 2: Shadow Color Differences</h2>
+            <p>In this phase, you'll again see pairs of images side by side.</p>
+            <p><span class="highlight">Your task is to determine if the shadows appear to differ in color</span></p>
+            <p>You'll complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
+            <p>Focus on the color properties of the shadows (hue, saturation) rather than brightness.</p>
           </div>`,
         choices: ['Start Phase 2'],
-        data: { phase: 'phase2_instructions' },
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+        on_load: function() {
+          document.querySelector('.progress-container').style.display = 'none';
+          document.getElementById('phase-indicator').style.display = 'none';
+          document.getElementById('trial-counter').style.display = 'none';
+        }
       });
 
-      selectedPairs.forEach(pair => {
+      // Phase 2 trials
+      randomizedPairs.forEach((pair, idx) => {
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
+            <div class="image-container">
+              <img src="${pair[0]}" alt="Left image" />
+              <img src="${pair[1]}" alt="Right image" />
             </div>
-            <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
+            <div class="question-text">Do you see a color difference between the shadows?</div>
           `,
           choices: ['Yes', 'No'],
           data: {
             phase: 'phase2',
             image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
+            image_right: pair[1].split('/').pop(),
+            trial_index: idx + 1,
+            total_trials: randomizedPairs.length
           },
-          post_trial_gap: 500,
+          on_start: function() {
+            trialCounter++;
+            updateProgressBar(trialCounter, totalTrials, "Color Difference");
+          },
+          post_trial_gap: 300,
           on_finish: data => {
             data.response = data.response === 0 ? 'yes' : 'no';
-            jsPsych.getDisplayElement().innerHTML = '';
           }
         });
       });
 
-    // Phase 3 Instruction
-    timeline.push({
-      type: jsPsychHtmlButtonResponse,
-      stimulus: `
-        <div class="welcome-card">
-          <h2>Phase 3: Shadow Intensity</h2>
-          <p>You'll see single images with two shadows.</p>
-          <p><strong>Choose which shadow looks brighter."</strong></p>
-        </div>`,
-      choices: ['Begin Phase 3'],
-      data: { phase: 'phase3_instructions' },
-      on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
-    });
+      // Phase 3 Instruction
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <div class="welcome-card">
+            <h2>Phase 3: Shadow Intensity in Single Images</h2>
+            <p>In this final phase, you'll see individual images containing two shadows.</p>
+            <p><span class="highlight">Your task is to select which shadow looks brighter</span></p>
+            <p>You'll evaluate ${images.length} images.</p>
+            <p>Focus on the relative brightness of the two shadows within each image.</p>
+          </div>`,
+        choices: ['Start Phase 3'],
+        on_load: function() {
+          document.querySelector('.progress-container').style.display = 'none';
+          document.getElementById('phase-indicator').style.display = 'none';
+          document.getElementById('trial-counter').style.display = 'none';
+        }
+      });
 
-      images.forEach(img => {
+      // Shuffle images for Phase 3
+      const shuffledImages = jsPsych.randomization.shuffle(images);
+
+      // Phase 3 trials
+      shuffledImages.forEach((img, idx) => {
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
-            <div style="display: flex; justify-content: center;">
-              <img src="${img}" />
+            <div class="image-container">
+              <img src="${img}" alt="Test image" />
             </div>
-            <p>Which shadow looks brighter?</p>
+            <div class="question-text">Which shadow looks brighter?</div>
           `,
-          choices: ['Left Shadow', 'Same', 'Right Shadow'],
-          data: { phase: 'phase3', image: img.split('/').pop() },
-          post_trial_gap: 500,
+          choices: ['Left Shadow', 'Same Brightness', 'Right Shadow'],
+          data: {
+            phase: 'phase3',
+            image: img.split('/').pop(),
+            trial_index: idx + 1,
+            total_trials: shuffledImages.length
+          },
+          on_start: function() {
+            trialCounter++;
+            updateProgressBar(trialCounter, totalTrials, "Shadow Intensity");
+          },
+          post_trial_gap: 300,
           on_finish: data => {
             const labels = ['left', 'same', 'right'];
             data.response = labels[data.response];
             data.chosen_shadow = data.response;
-            jsPsych.getDisplayElement().innerHTML = '';
           }
         });
       });
 
-      // 1) Save-to-Google call
+      // Save data to Google Sheets - FIXED VERSION
       timeline.push({
         type: jsPsychCallFunction,
         async: true,
         func: async () => {
-          // grab ID & data
-          const form = jsPsych.data.get()
-            .filter({ trial_type: 'survey-html-form' })
-            .values()[0];
-          const participantID = form.response.participant_id;
+          // Get participant ID from earlier form
+          const formData = jsPsych.data.get().filter({trial_type: 'survey-html-form'}).values()[0];
+          participantID = formData.response.participant_id;
+          
+          // Get all trial data
           const trials = jsPsych.data.get()
             .filter(trial => trial.phase)
             .values()
@@ -327,59 +561,83 @@
               response: trial.response,
               rt: trial.rt
             }));
-          // actually save
-          let saveResult;
-          try {
-            saveResult = await saveToGoogleSheets(participantID, trials);
-          } catch (e) {
-            saveResult = { success: false, message: e.message };
-          }
-          // stash the result on *this* trial’s data
-          jsPsych.data.addProperties({ saveResult, participantID });
+          
+          // Actually save the data
+          saveResult = await saveToGoogleSheets(participantID, trials);
+          
+          // Return the result for data tracking
+          return {
+            saveResult: saveResult,
+            participantID: participantID
+          };
+        },
+        on_finish: (data) => {
+          // Store the result in the trial data
+          data.saveResult = saveResult;
+          data.participantID = participantID;
         }
       });
       
-      // 2) Final “Thank You” screen
+      // Fixed Thank You Screen - Now working properly
       timeline.push({
         type: jsPsychHtmlButtonResponse,
-        stimulus: () => {
-          // grab the very last trial (it has saveResult & participantID)
-          const callData = jsPsych.data.get()
-            .last(1)
-            .values()[0];
-        
-          if (!callData || callData.saveResult == null) {
-            return `
-              <div class="welcome-card">
-                <h2 class="error-message">Internal Error</h2>
-                <p>Could not retrieve save result.</p>
-              </div>`;
-          }
-        
-          const { saveResult, participantID } = callData;
-          if (saveResult.success) {
-            return `
-              <div class="welcome-card">
-                <h2>Thank You!</h2>
-                <p>Responses saved successfully for participant ${participantID}.</p>
-                <p>You may now close this window.</p>
-              </div>`;
+        stimulus: function() {
+          // Get the save result from global variables
+          if (saveResult && participantID) {
+            if (saveResult.success) {
+              createConfetti();
+              return `
+                <div class="welcome-card">
+                  <h2>✅ Experiment Complete!</h2>
+                  <p>Thank you for participating in our study!</p>
+                  <p>Your responses have been successfully recorded for participant ID: <strong>${participantID}</strong></p>
+                  
+                  <div class="debrief-section">
+                    <h3>About This Study</h3>
+                    <p>This experiment investigates how humans perceive differences in shadow properties. Specifically, we're examining:</p>
+                    <ul>
+                      <li>How sensitive people are to differences in shadow brightness</li>
+                      <li>Whether people perceive color differences in shadows under varying conditions</li>
+                      <li>How context affects shadow perception in multi-shadow environments</li>
+                    </ul>
+                    
+                    <h3>Why This Research Matters</h3>
+                    <p>Understanding shadow perception helps us:</p>
+                    <ul>
+                      <li>Improve computer vision systems</li>
+                      <li>Develop better visual displays and interfaces</li>
+                      <li>Understand fundamental principles of human vision</li>
+                      <li>Advance fields like computer graphics and augmented reality</li>
+                    </ul>
+                    
+                    <h3>Your Contribution</h3>
+                    <p>By participating, you've contributed valuable data that will help advance our understanding of visual perception. Your anonymous responses will be analyzed along with others to identify patterns in shadow perception.</p>
+                  </div>
+                  
+                  <p>You may now close this window or click below to restart the experiment.</p>
+                </div>`;
+            } else {
+              return `
+                <div class="welcome-card">
+                  <h2 class="error-message">⚠️ Data Save Error</h2>
+                  <p>We encountered an issue saving your data: ${saveResult.message}</p>
+                  <p>Please contact the researcher with your participant ID: <strong>${participantID}</strong></p>
+                  <p>As a backup, we've stored your data in this browser. Please do not clear your browser data until you've contacted the researcher.</p>
+                </div>`;
+            }
           } else {
             return `
               <div class="welcome-card">
-                <h2 class="error-message">Data Save Error</h2>
-                <p>${saveResult.message}</p>
-                <p>Please contact the researcher with your participant ID: ${participantID}</p>
-                <p>We'll save your data locally as a backup.</p>
+                <h2 class="error-message">⚠️ Data Processing Error</h2>
+                <p>We encountered an issue processing your data. Please contact the researcher.</p>
+                <p>If you have your participant ID, please record it: ${participantID || 'Not available'}</p>
               </div>`;
           }
         },
-
-        choices: ['Repeat Experiment','Exit'],
+        choices: ['Restart Experiment', 'Exit'],
         on_finish: data => {
           if (data.response === 0) {
-            jsPsych.endExperiment('', true);
-            runExperiment();
+            location.reload();
           }
         }
       });
@@ -393,6 +651,9 @@
 
     runExperiment();
   </script>
+  
+  <div class="footer">
+    Perception Study | Department of Cognitive Psychology | © 2023
+  </div>
 </body>
 </html>
-  
