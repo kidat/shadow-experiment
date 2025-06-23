@@ -87,11 +87,10 @@
 
   <script>
     // --- CONFIG ---
-     const GITHUB_USERNAME = "kidat";
+    const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
     const IMAGES_BRANCH = "main";
-    // Updated to use EXEC endpoint (not DEV)
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNxxd274gfXzByiHZ0ffq4VUM-ojrwFeCegFvvU4uem4pJM_pGyuByxqCNQhSmaQ0BSA/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwKOIYd3X4wlabr3LCyuHz3kfRQMdXEESgk-v97xhsW_0kl9637v9-yvBX8OHFv2FMEfw/exec";
 
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
     const images = Array.from({ length: 15 }, (_, i) => `${repoBase}images/${i + 1}.png`);
@@ -103,24 +102,28 @@
       }
     });
 
-    // Enhanced save function with better error handling
+    // Enhanced save function with detailed logging
     async function saveToGoogleSheets(participantID, trialsData) {
       try {
+        console.log("Saving data for participant:", participantID);
+        console.log("Data to save:", trialsData);
+        
         const response = await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ participantID, trials: trialsData })
         });
         
-        // Handle HTTP errors
+        // Log raw response for debugging
+        const responseText = await response.text();
+        console.log("Raw response:", responseText);
+        
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Server error ${response.status}: ${errorText}`);
+          throw new Error(`Server error ${response.status}: ${responseText}`);
         }
         
-        const result = await response.json();
+        const result = JSON.parse(responseText);
         
-        // Handle Google Script errors
         if (!result.success) {
           throw new Error(result.error || "Unknown server error");
         }
@@ -163,7 +166,10 @@
                    placeholder="Enter 4-digit ID" autocomplete="off" />
           </div>`,
         button_label: 'Continue',
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+        on_finish: (data) => {
+          window.participantID = data.response.participant_id;
+          jsPsych.getDisplayElement().innerHTML = '';
+        }
       });
 
       // Phase 1 Instruction
@@ -286,14 +292,15 @@
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: async () => {
-          const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).last(1).values()[0];
-          const participantID = formTrial?.response?.participant_id;
+          const participantID = window.participantID;
           
           if (!participantID || !/^\d{4}$/.test(participantID)) {
             return `<div class="welcome-card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
           }
 
-          const trialsData = jsPsych.data.get().filter(trial => trial.phase).values().map(trial => ({
+          const trialsData = jsPsych.data.get().filter(trial => 
+            trial.phase && !trial.phase.includes('_instructions')
+          ).values().map(trial => ({
             phase: trial.phase,
             image_left: trial.image_left || '',
             image_right: trial.image_right || '',
@@ -325,6 +332,7 @@
                 <p>${e.message}</p>
                 <p>Your data has been saved locally as a backup.</p>
                 <p>Please contact the researcher with your participant ID: ${participantID}</p>
+                <p>Local backup key: <code>shadow_data_${participantID}</code></p>
               </div>
             `;
           }
