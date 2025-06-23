@@ -327,35 +327,65 @@
               response: trial.response,
               rt: trial.rt
             }));
-           try {
-            const saveResult = await saveToGoogleSheets(participantID, trialsData);
-            return `
-              <div class="welcome-card">
-                <h2>Thank You!</h2>
-                <p>Responses saved successfully for participant ${participantID}.</p>
-                <p>You may now close this window.</p>
-              </div>
-            `;
+          // actually save
+          let saveResult;
+          try {
+            saveResult = await saveToGoogleSheets(participantID, trials);
           } catch (e) {
-            return `
-              <div class="welcome-card">
-                <h2 class="error-message">Data Save Error</h2>
-                <p>${e.message}</p>
-                <p>Please contact the researcher with your participant ID: ${participantID}</p>
-                <p>We'll save your data locally as a backup.</p>
-              </div>
-            `;
+            saveResult = { success: false, message: e.message };
           }
-        },
-        choices: ['Repeat Experiment', 'Exit'],
-        on_finish: (data) => {
-          jsPsych.getDisplayElement().innerHTML = '';
-          if (data.response === 0) {  // Repeat Experiment
-            jsPsych.endExperiment('', true);
-            runExperiment();
-          }
+          // stash the result on *this* trial’s data
+          jsPsych.data.addProperties({ saveResult, participantID });
         }
       });
+      
+     // 2) Final “Thank You” screen
+timeline.push({
+  type: jsPsychHtmlButtonResponse,
+  stimulus: () => {
+    const allData = jsPsych.data.get().values();
+    const globalData = allData.find(d => d.saveResult !== undefined);
+
+    if (!globalData || !globalData.saveResult) {
+      return `
+        <div class="welcome-card">
+          <h2 class="error-message">Internal Error</h2>
+          <p>Could not retrieve save result.</p>
+        </div>`;
+    }
+
+    const { saveResult, participantID } = globalData;
+
+    if (saveResult.success) {
+      return `
+        <div class="welcome-card">
+          <h2>Thank You!</h2>
+          <p>Responses saved successfully for participant ${participantID}.</p>
+          <p>You may now close this window.</p>
+        </div>`;
+    } else {
+      return `
+        <div class="welcome-card">
+          <h2 class="error-message">Data Save Error</h2>
+          <p>${saveResult.message}</p>
+          <p>Please contact the researcher with your participant ID: ${participantID}</p>
+          <p>We'll save your data locally as a backup.</p>
+        </div>`;
+    }
+  },
+  choices: ['Repeat Experiment', 'Exit'],
+  on_finish: data => {
+    if (data.response === 0) {
+      // Repeat experiment: end and then restart
+      jsPsych.endExperiment('Restarting experiment...', false);
+      // Delay before restarting to ensure proper cleanup
+      setTimeout(() => runExperiment(), 1000);
+    } else {
+      // Exit experiment: just end
+      jsPsych.endExperiment('Thank you for participating!');
+    }
+  }
+});
 
       return timeline;
     }
@@ -368,3 +398,4 @@
   </script>
 </body>
 </html>
+  
