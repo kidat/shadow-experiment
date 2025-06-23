@@ -302,12 +302,12 @@
         });
       });
 
-      // Final Screen + Save to Google Sheets
+      // 1) Save-to-Google call
       timeline.push({
         type: jsPsychCallFunction,
-        async: true,              // allows using await inside the function
+        async: true,
         func: async () => {
-          // grab ID & data as before
+          // grab ID & data
           const form = jsPsych.data.get()
             .filter({ trial_type: 'survey-html-form' })
             .values()[0];
@@ -331,16 +331,29 @@
           } catch (e) {
             saveResult = { success: false, message: e.message };
           }
-          // stash the result in jsPsych’s data store
+          // stash the result on *this* trial’s data
           jsPsych.data.addProperties({ saveResult, participantID });
         }
       });
       
-      // 2) Then push a *normal* html‐button‐response that reads that result:
+      // 2) Final “Thank You” screen
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: () => {
-          const { saveResult, participantID } = jsPsych.data.get().values()[0];
+          // **grab the call-function trial**, not the first row**
+          const callData = jsPsych.data.get()
+            .filter({ trial_type: 'call-function' })  // or 'call-function' if you registered it by string
+            .values()[0];
+      
+          if (!callData) {
+            return `
+              <div class="welcome-card">
+                <h2 class="error-message">Internal Error</h2>
+                <p>Could not retrieve save result.</p>
+              </div>`;
+          }
+      
+          const { saveResult, participantID } = callData;
           if (saveResult.success) {
             return `
               <div class="welcome-card">
