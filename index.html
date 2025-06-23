@@ -174,28 +174,31 @@
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px; margin: 20px 0;">
-              <img src="${pair[0]}" alt="Left Image" />
-              <img src="${pair[1]}" alt="Right Image" />
+            <div style="display: flex; justify-content: center; gap: 50px;">
+              <img src="${pair[0]}" />
+              <img src="${pair[1]}" />
             </div>
-            <p>Choose the image with the brighter shadow?</p>
+            <p>Which shadow appears brighter?</p>
           `,
-          choices: ['Left Image', 'Right Image'],
+          choices: ['Left Shadow', 'Same', 'Right Shadow'],
           data: {
             phase: 'phase1',
             image_left: pair[0].split('/').pop(),
             image_right: pair[1].split('/').pop()
           },
           post_trial_gap: 500,
-          on_finish: (data) => {
-            data.chosen_image = data.response === 0
-              ? pair[0].split('/').pop()
-              : pair[1].split('/').pop();
+          on_finish: data => {
+            const labels = ['left', 'same', 'right'];
+            data.response = labels[data.response];
+            data.chosen_image = data.response === 'left'
+              ? data.image_left
+              : data.response === 'right'
+              ? data.image_right
+              : 'same';
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
       });
-
 
       timeline.push({
         type: jsPsychHtmlButtonResponse,
