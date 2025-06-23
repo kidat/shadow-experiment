@@ -327,59 +327,36 @@
               response: trial.response,
               rt: trial.rt
             }));
-          // actually save
-          let saveResult;
-          try {
-            saveResult = await saveToGoogleSheets(participantID, trials);
-          } catch (e) {
-            saveResult = { success: false, message: e.message };
-          }
-          // stash the result on *this* trial’s data
-          jsPsych.data.addProperties({ saveResult, participantID });
-        }
-      });
-      
-     // 2) Final “Thank You” screen
-// 2) Fixed Final "Thank You" screen
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: () => {
-          // Get the save result from the data properties
-          const properties = jsPsych.data.get().values()[0]?.saveResult 
-            ? jsPsych.data.get().properties()
-            : { saveResult: { success: false, message: "Data not available" } };
-          
-          const { saveResult, participantID } = properties;
-
-          if (saveResult.success) {
+           try {
+            const saveResult = await saveToGoogleSheets(participantID, trialsData);
             return `
               <div class="welcome-card">
                 <h2>Thank You!</h2>
-                <p class="success-message">Data saved successfully for participant ${participantID}.</p>
-                <p>You may now choose to repeat the experiment or exit.</p>
-              </div>`;
-          } else {
+                <p>Responses saved successfully for participant ${participantID}.</p>
+                <p>You may now close this window.</p>
+              </div>
+            `;
+          } catch (e) {
             return `
               <div class="welcome-card">
                 <h2 class="error-message">Data Save Error</h2>
-                <p>${saveResult.message}</p>
+                <p>${e.message}</p>
                 <p>Please contact the researcher with your participant ID: ${participantID}</p>
                 <p>We'll save your data locally as a backup.</p>
-              </div>`;
+              </div>
+            `;
           }
         },
         choices: ['Repeat Experiment', 'Exit'],
-        on_load: () => {
-          // Add restart functionality directly to buttons
-          document.querySelector('.jspsych-btn[data-choice="0"]').onclick = () => {
-            location.reload(); // Full page reload to restart
-          };
-          
-          document.querySelector('.jspsych-btn[data-choice="1"]').onclick = () => {
-            jsPsych.endExperiment('', true); // Clean exit
-          };
+        on_finish: (data) => {
+          jsPsych.getDisplayElement().innerHTML = '';
+          if (data.response === 0) {  // Repeat Experiment
+            jsPsych.endExperiment('', true);
+            runExperiment();
+          }
         }
       });
+
       return timeline;
     }
 
@@ -391,4 +368,3 @@
   </script>
 </body>
 </html>
-  
