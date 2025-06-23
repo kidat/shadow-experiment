@@ -9,114 +9,78 @@
   <script src="https://unpkg.com/@jspsych/plugin-preload"></script>
   <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #808080;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding-top: 40px;
-      min-height: 100vh;
-    }
-    #jspsych-target {
-      width: 100%;
-      max-width: 900px;
-      text-align: center;
-      overflow-x: auto;
-      padding: 0 10px;
-    }
-    img {
-      max-height: 450px;
-      max-width: 50vw;
-      height: auto;
-      width: auto;
-      object-fit: contain;
-    }
-    .welcome-card {
-      background: #f0f0f0;
-      padding: 40px 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .welcome-card h1 {
-      font-size: 2.2rem;
-      margin-bottom: 15px;
-      color: #222;
-    }
-    .welcome-card h2 {
-      font-size: 1.8rem;
-      margin-bottom: 15px;
-      color: #222;
-    }
-    .welcome-card p {
-      font-size: 1.1rem;
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-    .jspsych-btn {
-      font-size: 1.1rem !important;
-      padding: 12px 30px !important;
-      border-radius: 8px !important;
-      background-color: #007acc !important;
-      color: white !important;
-      border: none !important;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin: 10px 15px !important;
-    }
-    .jspsych-btn:hover {
-      background-color: #005fa3 !important;
-    }
-    .jspsych-btn-group {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-top: 20px;
-    }
-    .error-message {
-      color: #d32f2f;
-      font-weight: bold;
-    }
-    .success-message {
-      color: #388e3c;
-      font-weight: bold;
-    }
-    .final-screen {
-      background: #f0f0f0;
-      padding: 40px 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .loading-screen {
-      background: #f0f0f0;
-      padding: 40px 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .loading-spinner {
-      border: 4px solid rgba(0, 0, 0, 0.1);
-      border-top: 4px solid #007acc;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 20px auto;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
+ <style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #808080;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 40px;
+    min-height: 100vh;
+  }
+  #jspsych-target {
+    width: 100%;
+    max-width: 900px;
+    text-align: center;
+    overflow-x: auto;
+    padding: 0 10px;
+  }
+  img {
+    max-height: 450px;
+    max-width: 50vw;
+    height: auto;
+    width: auto;
+    object-fit: contain;
+  }
+  .welcome-card {
+    background: #f0f0f0;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    color: #333;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .welcome-card h1 {
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+    color: #222;
+  }
+  .welcome-card p {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .jspsych-btn {
+    font-size: 1.1rem !important;
+    padding: 12px 30px !important;
+    border-radius: 8px !important;
+    background-color: #007acc !important;
+    color: white !important;
+    border: none !important;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    /* Added spacing between buttons */
+    margin: 0 15px !important;
+  }
+  .jspsych-btn:hover {
+    background-color: #005fa3 !important;
+  }
+  .error-message {
+    color: #d32f2f;
+    font-weight: bold;
+  }
+
+  /* Optional: center buttons with flex container for better spacing */
+  .jspsych-html-button-response .jspsych-btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 30px; /* spacing between buttons */
+  }
+</style>
+
 </head>
 <body>
   <div id="jspsych-target"></div>
@@ -126,6 +90,7 @@
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
     const IMAGES_BRANCH = "main";
+    // Use the correct Google Apps Script URL format
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz9uHRsCAVT0M0zi6AbJpFrmYn0OGG2l_rf2VymMpFeTVi7_rPJHX5XQSwa9ua4vjrMhA/exec";
 
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
@@ -133,24 +98,25 @@
 
     const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
 
+    // Enhanced save function with better error handling
     async function saveToGoogleSheets(participantID, trialsData) {
-      try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ participantID, trials: trialsData })
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Server responded with status ${response.status}`);
-        }
-        
-        return await response.json();
-      } catch (e) {
-        console.error("Save error:", e);
-        throw new Error(`Failed to save data: ${e.message}`);
-      }
+  try {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participantID, trials: trialsData })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server responded with status ${response.status}`);
     }
+    
+    return await response.json();
+  } catch (e) {
+    console.error("Save error:", e);
+    throw new Error(`Failed to save data: ${e.message}`);
+  }
+}
 
     function createTimeline() {
       const timeline = [];
@@ -196,7 +162,7 @@
             <p>You will complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
           </div>`,
         choices: ['Start Comparing'],
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = '' // ✅ clear screen after instruction
       });
 
       // Pairwise Trials
@@ -242,11 +208,10 @@
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
-          <div class="welcome-card">
-            <h2>Phase 2: Color Difference Judgment</h2>
-            <p>You will now again see two images side by side.</p>
-            <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
-          </div>`,
+          <h2>Phase 2: Color Difference Judgment</h2>
+          <p>You will now again see two images side by side.</p>
+          <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
+        `,
         choices: ['Start Phase 2'],
         data: { phase: 'phase2_instructions' },
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
@@ -279,11 +244,10 @@
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
-          <div class="welcome-card">
-            <h2>Phase 3: Shadow Brightness Comparison</h2>
-            <p>Now, please look at the image below which contains two shadows created by spheres.</p>
-            <p>Choose which shadow looks more intense or if they appear the same.</p>
-          </div>`,
+          <h2>Phase 3: Shadow Brightness Comparison</h2>
+          <p>Now, please look at the image below which contains two shadows created by spheres.</p>
+          <p>Choose which shadow looks more intense or if they appear the same.</p>
+        `,
         choices: ['Begin Phase 3'],
         data: { phase: 'phase3_instructions' },
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
@@ -310,48 +274,13 @@
         });
       });
 
-      // Loading screen
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `
-          <div class="loading-screen">
-            <h2>Saving Your Responses</h2>
-            <div class="loading-spinner"></div>
-            <p>Please wait while we save your data...</p>
-          </div>`,
-        choices: [],
-        trial_duration: 1000,
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
-      });
-
       // Final Screen + Save to Google Sheets
       timeline.push({
         type: jsPsychHtmlButtonResponse,
-        stimulus: function() {
+        stimulus: async () => {
           const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
           if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
-            return `
-              <div class="final-screen">
-                <h2 class="error-message">Error</h2>
-                <p>Missing or invalid Participant ID</p>
-              </div>`;
-          }
-
-          return `
-            <div class="final-screen">
-              <h2>Saving Complete</h2>
-              <p>Your responses are being processed...</p>
-            </div>
-          `;
-        },
-        choices: function() {
-          return ['Please wait...'];
-        },
-        trial_duration: 1000,
-        on_load: async function() {
-          const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
-          if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
-            return;
+            return `<div class="welcome-card"><h2 class="error-message">Error</h2><p>Missing or invalid Participant ID</p></div>`;
           }
 
           const participantID = formTrial.response.participant_id;
@@ -367,53 +296,32 @@
           }));
 
           try {
-            await saveToGoogleSheets(participantID, trialsData);
-            // Move to success screen
-            timeline.push({
-              type: jsPsychHtmlButtonResponse,
-              stimulus: `
-                <div class="final-screen">
-                  <h2 class="success-message">Thank You!</h2>
-                  <p>Your responses have been successfully saved.</p>
-                  <p>We appreciate your participation in this study.</p>
-                  <p><strong>Participant ID: ${participantID}</strong></p>
-                </div>
-              `,
-              choices: ['Repeat Experiment', 'Exit'],
-              on_finish: (data) => {
-                if (data.response === 0) {
-                  jsPsych.endExperiment('', true);
-                  runExperiment();
-                }
-              }
-            });
+            const saveResult = await saveToGoogleSheets(participantID, trialsData);
+            return `
+              <div class="welcome-card">
+                <h2>Thank You!</h2>
+                <p>Responses saved successfully for participant ${participantID}.</p>
+                <p>You may now close this window.</p>
+              </div>
+            `;
           } catch (e) {
-            // Move to error screen
-            timeline.push({
-              type: jsPsychHtmlButtonResponse,
-              stimulus: `
-                <div class="final-screen">
-                  <h2 class="error-message">Oops!</h2>
-                  <p><strong>Data failed to save.</strong></p>
-                  <p>${e.message}</p>
-                  <p>Please contact the researcher with your participant ID:</p>
-                  <p><strong>${participantID}</strong></p>
-                  <p>We'll save your data locally as a backup.</p>
-                </div>
-              `,
-              choices: ['Repeat Experiment', 'Exit'],
-              on_finish: (data) => {
-                if (data.response === 0) {
-                  jsPsych.endExperiment('', true);
-                  runExperiment();
-                }
-              }
-            });
+            return `
+              <div class="welcome-card">
+                <h2 class="error-message">Data Save Error</h2>
+                <p>${e.message}</p>
+                <p>Please contact the researcher with your participant ID: ${participantID}</p>
+                <p>We'll save your data locally as a backup.</p>
+              </div>
+            `;
           }
-          
-          // Continue to the next trial
+        },
+        choices: ['Repeat Experiment', 'Exit'],
+        on_finish: (data) => {
           jsPsych.getDisplayElement().innerHTML = '';
-          jsPsych.nextTrial();
+          if (data.response === 0) {  // Repeat Experiment
+            jsPsych.endExperiment('', true);
+            runExperiment();
+          }
         }
       });
 
