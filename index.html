@@ -67,7 +67,7 @@
       border: none !important;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      margin: 10px 15px !important; /* Added spacing between buttons */
+      margin: 10px 15px !important;
     }
     .jspsych-btn:hover {
       background-color: #005fa3 !important;
@@ -76,7 +76,7 @@
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 15px; /* Added gap between buttons */
+      gap: 15px;
       margin-top: 20px;
     }
     .error-message {
@@ -94,6 +94,27 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.15);
       max-width: 600px;
       margin: 0 auto;
+    }
+    .loading-screen {
+      background: #f0f0f0;
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .loading-spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-top: 4px solid #007acc;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -175,7 +196,7 @@
             <p>You will complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
           </div>`,
         choices: ['Start Comparing'],
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = '' // ✅ clear screen after instruction
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
       // Pairwise Trials
@@ -289,10 +310,24 @@
         });
       });
 
+      // Loading screen
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <div class="loading-screen">
+            <h2>Saving Your Responses</h2>
+            <div class="loading-spinner"></div>
+            <p>Please wait while we save your data...</p>
+          </div>`,
+        choices: [],
+        trial_duration: 1000,
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+      });
+
       // Final Screen + Save to Google Sheets
       timeline.push({
         type: jsPsychHtmlButtonResponse,
-        stimulus: async () => {
+        stimulus: function() {
           const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
           if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
             return `
@@ -300,6 +335,23 @@
                 <h2 class="error-message">Error</h2>
                 <p>Missing or invalid Participant ID</p>
               </div>`;
+          }
+
+          return `
+            <div class="final-screen">
+              <h2>Saving Complete</h2>
+              <p>Your responses are being processed...</p>
+            </div>
+          `;
+        },
+        choices: function() {
+          return ['Please wait...'];
+        },
+        trial_duration: 1000,
+        on_load: async function() {
+          const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
+          if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
+            return;
           }
 
           const participantID = formTrial.response.participant_id;
@@ -315,42 +367,53 @@
           }));
 
           try {
-            const saveResult = await saveToGoogleSheets(participantID, trialsData);
-            return `
-              <div class="final-screen">
-                <h2 class="success-message">Thank You!</h2>
-                <p>Your responses have been successfully saved.</p>
-                <p>We appreciate your participation in this study.</p>
-                <p><strong>Participant ID: ${participantID}</strong></p>
-              </div>
-            `;
+            await saveToGoogleSheets(participantID, trialsData);
+            // Move to success screen
+            timeline.push({
+              type: jsPsychHtmlButtonResponse,
+              stimulus: `
+                <div class="final-screen">
+                  <h2 class="success-message">Thank You!</h2>
+                  <p>Your responses have been successfully saved.</p>
+                  <p>We appreciate your participation in this study.</p>
+                  <p><strong>Participant ID: ${participantID}</strong></p>
+                </div>
+              `,
+              choices: ['Repeat Experiment', 'Exit'],
+              on_finish: (data) => {
+                if (data.response === 0) {
+                  jsPsych.endExperiment('', true);
+                  runExperiment();
+                }
+              }
+            });
           } catch (e) {
-            return `
-              <div class="final-screen">
-                <h2 class="error-message">Oops!</h2>
-                <p><strong>Data failed to save.</strong></p>
-                <p>${e.message}</p>
-                <p>Please notify the researcher with your participant ID:</p>
-                <p><strong>${participantID}</strong></p>
-                <p>We'll save your data locally as a backup.</p>
-              </div>
-            `;
+            // Move to error screen
+            timeline.push({
+              type: jsPsychHtmlButtonResponse,
+              stimulus: `
+                <div class="final-screen">
+                  <h2 class="error-message">Oops!</h2>
+                  <p><strong>Data failed to save.</strong></p>
+                  <p>${e.message}</p>
+                  <p>Please contact the researcher with your participant ID:</p>
+                  <p><strong>${participantID}</strong></p>
+                  <p>We'll save your data locally as a backup.</p>
+                </div>
+              `,
+              choices: ['Repeat Experiment', 'Exit'],
+              on_finish: (data) => {
+                if (data.response === 0) {
+                  jsPsych.endExperiment('', true);
+                  runExperiment();
+                }
+              }
+            });
           }
-        },
-        choices: function() {
-          const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
-          const participantID = formTrial?.response?.participant_id;
           
-          if (participantID && /^\d{4}$/.test(participantID)) {
-            return ['Repeat Experiment', 'Exit'];
-          }
-          return ['Try Again', 'Exit'];
-        },
-        on_finish: (data) => {
-          if (data.response === 0) {  // Repeat Experiment or Try Again
-            jsPsych.endExperiment('', true);
-            runExperiment();
-          }
+          // Continue to the next trial
+          jsPsych.getDisplayElement().innerHTML = '';
+          jsPsych.nextTrial();
         }
       });
 
