@@ -115,7 +115,6 @@
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
     const IMAGES_BRANCH = "main";
-    // Updated Google Apps Script URL for the fixed version
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_ctpNLWxP2XAZsRR1a0pIBQzTyEiAOtIsi3hjO3egMURrcimyecIptagt4iJLoOGukQ/exec";
 
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
@@ -124,7 +123,6 @@
     const jsPsych = initJsPsych({ 
       display_element: 'jspsych-target',
       on_finish: () => {
-        // Clean up after experiment
         document.body.style.backgroundColor = "#f0f0f0";
       }
     });
@@ -169,22 +167,37 @@
 
       // Add progress bar to all trials
       const addProgressBar = (trial) => {
-        return {
-          ...trial,
+        const phaseText = (trial.data && trial.data.phase) ? 
+          trial.data.phase.toUpperCase().replace('_', ' ') : 'EXPERIMENT';
+        const progressWidth = (trialCounter / totalTrials * 100).toFixed(0);
+        
+        // Create new trial object without spread operator
+        const newTrial = {
+          type: trial.type,
           stimulus: trial.stimulus + `
-            <div class="phase-indicator">${trial.data?.phase?.toUpperCase().replace('_', ' ') || 'EXPERIMENT'}</div>
+            <div class="phase-indicator">${phaseText}</div>
             <div class="progress-container">
-              <div class="progress-bar" style="width: ${(trialCounter++ / totalTrials * 100).toFixed(0)}%"></div>
+              <div class="progress-bar" style="width: ${progressWidth}%"></div>
             </div>
-          `
+          `,
+          choices: trial.choices,
+          data: trial.data,
+          post_trial_gap: trial.post_trial_gap,
+          on_finish: trial.on_finish,
+          preamble: trial.preamble,
+          html: trial.html,
+          button_label: trial.button_label
         };
+        
+        trialCounter++;
+        return newTrial;
       };
 
-      timeline.push({ type: jsPsychPreload, images });
+      timeline.push({ type: "preload", images: images });
 
       // Welcome screen
       timeline.push(addProgressBar({
-        type: jsPsychHtmlButtonResponse,
+        type: "html-button-response",
         stimulus: `
           <div class="welcome-card">
             <h1>Shadow Color Perception Experiment</h1>
@@ -201,7 +214,7 @@
       
       // ID collection
       timeline.push(addProgressBar({
-        type: jsPsychSurveyHtmlForm,
+        type: "survey-html-form",
         preamble: '<div class="welcome-card"><h3>Participant ID</h3><p>Enter your 4-digit ID</p></div>',
         html: `
           <div class="form-group">
@@ -215,7 +228,7 @@
 
       // Phase 1 Instruction
       timeline.push(addProgressBar({
-        type: jsPsychHtmlButtonResponse,
+        type: "html-button-response",
         stimulus: `
           <div class="welcome-card">
             <h2>Phase 1: Pairwise Comparison</h2>
@@ -231,7 +244,7 @@
       // Phase 1 trials
       selectedPairs.forEach(pair => {
         timeline.push(addProgressBar({
-          type: jsPsychHtmlButtonResponse,
+          type: "html-button-response",
           stimulus: `
             <div style="display: flex; justify-content: center; gap: 50px; margin: 20px 0;">
               <img src="${pair[0]}" />
@@ -255,7 +268,7 @@
       });
 
       timeline.push(addProgressBar({
-        type: jsPsychHtmlButtonResponse,
+        type: "html-button-response",
         stimulus: `
           <div class="welcome-card">
             <h2>Phase 2: Color Difference Judgment</h2>
@@ -269,7 +282,7 @@
 
       selectedPairs.forEach(pair => {
         timeline.push(addProgressBar({
-          type: jsPsychHtmlButtonResponse,
+          type: "html-button-response",
           stimulus: `
             <div style="display: flex; justify-content: center; gap: 50px; margin: 20px 0;">
               <img src="${pair[0]}" />
@@ -292,7 +305,7 @@
       });
 
       timeline.push(addProgressBar({
-        type: jsPsychHtmlButtonResponse,
+        type: "html-button-response",
         stimulus: `
           <div class="welcome-card">
             <h2>Phase 3: Shadow Brightness Comparison</h2>
@@ -306,7 +319,7 @@
 
       images.forEach(img => {
         timeline.push(addProgressBar({
-          type: jsPsychHtmlButtonResponse,
+          type: "html-button-response",
           stimulus: `
             <div style="display: flex; justify-content: center; margin: 20px 0;">
               <img src="${img}" />
@@ -326,7 +339,7 @@
 
       // Final Screen + Save to Google Sheets
       timeline.push({
-        type: jsPsychHtmlButtonResponse,
+        type: "html-button-response",
         stimulus: async () => {
           const formTrial = jsPsych.data.get().filter({ trial_type: 'survey-html-form' }).values()[0];
           if (!formTrial?.response?.participant_id || !/^\d{4}$/.test(formTrial.response.participant_id)) {
@@ -369,7 +382,7 @@
         },
         choices: ['Exit'],
         data: { phase: 'completion' }
-      }));
+      });
 
       return timeline;
     }
