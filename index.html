@@ -343,39 +343,37 @@
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: () => {
-          // grab the very last trial (it has saveResult & participantID)
-          const callData = jsPsych.data.get()
-            .last(1)
-            .values()[0];
-        
-          if (!callData || callData.saveResult == null) {
+          const allData = jsPsych.data.get().values();
+          const globalData = allData.find(d => d.saveResult !== undefined);
+      
+          if (!globalData || !globalData.saveResult) {
             return `
-              <div class="welcome-card">
-                <h2 class="error-message">Internal Error</h2>
+              <div class=\"welcome-card\">
+                <h2 class=\"error-message\">Internal Error</h2>
                 <p>Could not retrieve save result.</p>
               </div>`;
           }
-        
-          const { saveResult, participantID } = callData;
+      
+          const { saveResult, participantID } = globalData;
+      
           if (saveResult.success) {
             return `
-              <div class="welcome-card">
+              <div class=\"welcome-card\">
                 <h2>Thank You!</h2>
                 <p>Responses saved successfully for participant ${participantID}.</p>
                 <p>You may now close this window.</p>
               </div>`;
           } else {
             return `
-              <div class="welcome-card">
-                <h2 class="error-message">Data Save Error</h2>
+              <div class=\"welcome-card\">
+                <h2 class=\"error-message\">Data Save Error</h2>
                 <p>${saveResult.message}</p>
                 <p>Please contact the researcher with your participant ID: ${participantID}</p>
                 <p>We'll save your data locally as a backup.</p>
               </div>`;
           }
         },
-
-        choices: ['Repeat Experiment','Exit'],
+        choices: ['Repeat Experiment', 'Exit'],
         on_finish: data => {
           if (data.response === 0) {
             jsPsych.endExperiment('', true);
@@ -383,6 +381,7 @@
           }
         }
       });
+
 
       return timeline;
     }
