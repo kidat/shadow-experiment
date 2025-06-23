@@ -9,7 +9,6 @@
   <script src="https://unpkg.com/@jspsych/plugin-preload"></script>
   <script src="https://unpkg.com/@jspsych/plugin-call-function"></script>
   <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
-
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -85,6 +84,12 @@
   <div id="jspsych-target"></div>
 
   <script>
+    // Plugins references (jsPsych 7+ requires these)
+    const jsPsychPreload = window.jsPsych.plugins["preload"];
+    const jsPsychHtmlButtonResponse = window.jsPsych.plugins["html-button-response"];
+    const jsPsychSurveyHtmlForm = window.jsPsych.plugins["survey-html-form"];
+    const jsPsychCallFunction = window.jsPsych.plugins["call-function"];
+
     // --- CONFIG ---
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
@@ -102,15 +107,11 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ participantID, trials: trialsData }),
-          redirect: "follow",
-          mode: "no-cors"
+          mode: "no-cors" // cannot read response body with no-cors
         });
 
-        if (response.type === 'opaque' || response.ok) {
-          return { success: true, message: "Data submitted successfully" };
-        } else {
-          throw new Error(`Server responded with status ${response.status}`);
-        }
+        // No response readable with no-cors mode, so just assume success
+        return { success: true, message: "Data submitted (or at least request sent)." };
       } catch (e) {
         console.error("Save error:", e);
         return { success: false, message: e.message };
@@ -297,52 +298,50 @@
         }
       });
 
-timeline.push({
-  type: jsPsychHtmlButtonResponse,
-  stimulus: () => {
-    const allData = jsPsych.data.get().values();
-    const globalData = allData.find(d => d.saveResult !== undefined);
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: () => {
+          const allData = jsPsych.data.get().values();
+          const globalData = allData.find(d => d.saveResult !== undefined);
 
-    if (!globalData || !globalData.saveResult) {
-      return `
-        <div class="welcome-card">
-          <h2 class="error-message">Internal Error</h2>
-          <p>Could not retrieve save result.</p>
-        </div>`;
-    }
+          if (!globalData || !globalData.saveResult) {
+            return `
+              <div class="welcome-card">
+                <h2 class="error-message">Internal Error</h2>
+                <p>Could not retrieve save result.</p>
+              </div>`;
+          }
 
-    const { saveResult, participantID } = globalData;
+          const { saveResult, participantID } = globalData;
 
-    if (saveResult.success) {
-      return `
-        <div class="welcome-card">
-          <h2>Thank You!</h2>
-          <p>Responses saved successfully for participant ${participantID}.</p>
-          <p>You may now close this window or restart the experiment.</p>
-        </div>`;
-    } else {
-      return `
-        <div class="welcome-card">
-          <h2 class="error-message">Data Save Error</h2>
-          <p>${saveResult.message}</p>
-          <p>Please contact the researcher with your participant ID: ${participantID}</p>
-          <p>We'll save your data locally as a backup.</p>
-        </div>`;
-    }
-  },
-  choices: ['Repeat Experiment', 'Exit'],
-  on_finish: data => {
-    if (data.response === 0) {
-      // Clear jsPsych data and reset the display before restarting
-      jsPsych.data.clear();
-      jsPsych.getDisplayElement().innerHTML = '';
-      runExperiment();
-    } else {
-      jsPsych.endExperiment('Thank you for participating!');
-    }
-  }
-});
-
+          if (saveResult.success) {
+            return `
+              <div class="welcome-card">
+                <h2>Thank You!</h2>
+                <p>Responses saved successfully for participant ${participantID}.</p>
+                <p>You may now close this window or restart the experiment.</p>
+              </div>`;
+          } else {
+            return `
+              <div class="welcome-card">
+                <h2 class="error-message">Data Save Error</h2>
+                <p>${saveResult.message}</p>
+                <p>Please contact the researcher with your participant ID: ${participantID}</p>
+                <p>We'll save your data locally as a backup.</p>
+              </div>`;
+          }
+        },
+        choices: ['Repeat Experiment', 'Exit'],
+        on_finish: data => {
+          if (data.response === 0) {
+            jsPsych.data.clear();
+            jsPsych.getDisplayElement().innerHTML = '';
+            runExperiment();
+          } else {
+            jsPsych.endExperiment('Thank you for participating!');
+          }
+        }
+      });
 
       return timeline;
     }
