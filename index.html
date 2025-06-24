@@ -122,7 +122,7 @@
         stimulus: `
           <div class="welcome-card">
             <h1>Shadow Color Perception Experiment</h1>
-            <p>kidu Thank you for participating in this color perception study.</p>
+            <p>haweyyy Thank you for participating in this color perception study.</p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
           </div>`,
         choices: ['Begin']
@@ -309,21 +309,19 @@ timeline.push({
         <h2>Thank You!</h2>
         <p>Your responses are saved.</p>
         <p>If you can, please repeat the experiment with the same ID.</p>
+        <p>Your participant ID: <strong>${participantID}</strong></p>
       </div>
 
     `;
   },
-  choices: ['Repeat Experiment', 'Exit'],
-  on_finish: data => {
-    if (data.response === 0) {
-      jsPsych.data.clear();
-      jsPsych.reset(); 
-      jsPsych.getDisplayElement().innerHTML = '';
-      runExperiment();
-    } else {
-      jsPsych.endExperiment('Thank you for participating!');
-    }
+ choices: ['Repeat Experiment', 'Exit'],
+on_finish: data => {
+  if (data.response === 0) {
+    window.location.reload();  // reload the entire page to restart experiment
+  } else {
+    jsPsych.endExperiment('Thank you for participating!');
   }
+}
 });
 
 
