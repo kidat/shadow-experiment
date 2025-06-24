@@ -122,7 +122,7 @@
         stimulus: `
           <div class="welcome-card">
             <h1>Shadow Color Perception Experiment</h1>
-            <p>woooow Thank you for participating in this color perception study.</p>
+            <p>eeeeee Thank you for participating in this color perception study.</p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
           </div>`,
         choices: ['Begin']
@@ -258,7 +258,6 @@
 
 
       // Corrected async data saving block
-// Corrected async data saving block
 timeline.push({
   type: jsPsychCallFunction,
   func: () => {
@@ -268,6 +267,9 @@ timeline.push({
         .values()[0];
 
       const participantID = form?.response?.participant_id || 'unknown';
+
+      // Add participantID early so it's available later
+      jsPsych.data.addProperties({ participantID });
 
       const trials = jsPsych.data.get()
         .filter(trial => trial.phase)
@@ -283,11 +285,9 @@ timeline.push({
 
       try {
         await saveToGoogleSheets(participantID, trials);
-        // We don't check result due to no-cors, so assume success
-        jsPsych.data.addProperties({ participantID });
+        // no-cors mode means no response checking possible
       } catch (e) {
-        // Even if error, just add participantID
-        jsPsych.data.addProperties({ participantID });
+        // continue even if saving fails
       }
 
       resolve();
@@ -299,7 +299,11 @@ timeline.push({
 timeline.push({
   type: jsPsychHtmlButtonResponse,
   stimulus: () => {
-    const participantID = jsPsych.data.get().properties().participantID || 'unknown';
+    // Get participantID from data properties
+    const allData = jsPsych.data.get().values();
+    const participantData = allData.find(d => d.participantID !== undefined) || {};
+    const participantID = participantData.participantID || 'unknown';
+
     return `
       <div class="welcome-card">
         <h2>Thank You!</h2>
