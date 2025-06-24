@@ -123,7 +123,7 @@
         stimulus: `
           <div class="welcome-card">
             <h1>Shadow Color Perception Experiment</h1>
-            <p>Thank you for participating in this color perception study.</p>
+            <p>Kidu Thank you for participating in this color perception study.</p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
           </div>`,
         choices: ['Begin']
@@ -182,11 +182,6 @@
           on_finish: data => {
             const labels = ['left', 'same', 'right'];
             data.response = labels[data.response];
-            data.chosen_image = data.response === 'left'
-              ? data.image_left
-              : data.response === 'right'
-              ? data.image_right
-              : 'same';
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -257,7 +252,6 @@
           on_finish: data => {
             const labels = ['left', 'same', 'right'];
             data.response = labels[data.response];
-            data.chosen_shadow = data.response;
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -278,7 +272,6 @@
               phase: trial.phase,
               image_left: trial.image_left || '',
               image_right: trial.image_right || '',
-              chosen_image: trial.chosen_image || '',
               image: trial.image || '',
               response: trial.response,
               rt: trial.rt
