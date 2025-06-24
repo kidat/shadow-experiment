@@ -263,80 +263,81 @@
         });
       });
 
-      timeline.push({
-        type: jsPsychCallFunction,
-        async: true,
-        func: async () => {
-          const form = jsPsych.data.get()
-            .filter({ trial_type: 'survey-html-form' })
-            .values()[0];
-          const participantID = form.response.participant_id;
-          const trials = jsPsych.data.get()
-            .filter(trial => trial.phase)
-            .values()
-            .map(trial => ({
-              phase: trial.phase,
-              image_left: trial.image_left || '',
-              image_right: trial.image_right || '',
-              chosen_image: trial.chosen_image || '',
-              image: trial.image || '',
-              response: trial.response,
-              rt: trial.rt
-            }));
-          let saveResult;
-          try {
-            saveResult = await saveToGoogleSheets(participantID, trials);
-          } catch (e) {
-            saveResult = { success: false, message: e.message };
-          }
-          jsPsych.data.addProperties({ saveResult, participantID });
-        }
-      });
+    // Replace the existing call function trial and thank you trial with this:
 
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: () => {
-          const allData = jsPsych.data.get().values();
-          const globalData = allData.find(d => d.saveResult !== undefined);
+timeline.push({
+  type: jsPsychCallFunction,
+  async: true,
+  func: async () => {
+    const form = jsPsych.data.get()
+      .filter({ trial_type: 'survey-html-form' })
+      .values()[0];
+    const participantID = form.response.participant_id;
+    const trials = jsPsych.data.get()
+      .filter(trial => trial.phase)
+      .values()
+      .map(trial => ({
+        phase: trial.phase,
+        image_left: trial.image_left || '',
+        image_right: trial.image_right || '',
+        chosen_image: trial.chosen_image || '',
+        image: trial.image || '',
+        response: trial.response,
+        rt: trial.rt
+      }));
+    
+    let saveResult;
+    try {
+      saveResult = await saveToGoogleSheets(participantID, trials);
+    } catch (e) {
+      saveResult = { success: false, message: e.message };
+    }
+    
+    // Store result in trial data
+    return { saveResult, participantID };
+  }
+});
 
-          if (!globalData || !globalData.saveResult) {
-            return `
-              <div class="welcome-card">
-                <h2 class="error-message">Internal Error</h2>
-                <p>Could not retrieve save result.</p>
-              </div>`;
-          }
-
-          const { saveResult, participantID } = globalData;
-
-          if (saveResult.success) {
-            return `
-              <div class="welcome-card">
-                <h2>Thank You!</h2>
-                <p>Responses saved successfully for participant ${participantID}.</p>
-                <p>You may now close this window or restart the experiment.</p>
-              </div>`;
-          } else {
-            return `
-              <div class="welcome-card">
-                <h2 class="error-message">Data Save Error</h2>
-                <p>${saveResult.message}</p>
-                <p>Please contact the researcher with your participant ID: ${participantID}</p>
-                <p>We'll save your data locally as a backup.</p>
-              </div>`;
-          }
-        },
-        choices: ['Repeat Experiment', 'Exit'],
-        on_finish: data => {
-          if (data.response === 0) {
-            jsPsych.data.clear();
-            jsPsych.getDisplayElement().innerHTML = '';
-            runExperiment();
-          } else {
-            jsPsych.endExperiment('Thank you for participating!');
-          }
-        }
-      });
+timeline.push({
+  type: jsPsychHtmlButtonResponse,
+  stimulus: () => {
+    // Get the last trial (call-function trial)
+    const lastTrial = jsPsych.data.get().last(1).values()[0];
+    
+    if (!lastTrial || lastTrial.trial_type !== 'call-function') {
+      return `<div class="welcome-card">
+        <h2 class="error-message">Data Processing Error</h2>
+        <p>Could not retrieve save status</p>
+      </div>`;
+    }
+    
+    const { saveResult, participantID } = lastTrial.value;
+    
+    if (saveResult.success) {
+      return `<div class="welcome-card">
+        <h2>Thank You!</h2>
+        <p>Responses saved successfully for participant ${participantID}.</p>
+        <p>You may now close this window or restart the experiment.</p>
+      </div>`;
+    } else {
+      return `<div class="welcome-card">
+        <h2 class="error-message">Data Save Error</h2>
+        <p>${saveResult.message}</p>
+        <p>Please contact the researcher with your participant ID: ${participantID}</p>
+      </div>`;
+    }
+  },
+  choices: ['Repeat Experiment', 'Exit'],
+  on_finish: data => {
+    if (data.response === 0) {
+      jsPsych.data.clear();
+      jsPsych.getDisplayElement().innerHTML = '';
+      runExperiment();
+    } else {
+      jsPsych.endExperiment();
+    }
+  }
+});
 
       return timeline;
     }
