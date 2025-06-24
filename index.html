@@ -96,22 +96,28 @@
 
     const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
 
-    async function saveToGoogleSheets(participantID, trialsData) {
-      try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ participantID, trials: trialsData }),
-          mode: "no-cors" // cannot read response body with no-cors
-        });
+   async function saveToGoogleSheets(participantID, trialsData) {
+  try {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participantID, trials: trialsData })
+      // ✅ Remove mode: "no-cors"
+    });
 
-        // No response readable with no-cors mode, so just assume success
-        return { success: true, message: "Data submitted (or at least request sent)." };
-      } catch (e) {
-        console.error("Save error:", e);
-        return { success: false, message: e.message };
-      }
+    // ✅ Check if response is OK and readable
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
     }
+
+    const result = await response.json();
+    return result;
+  } catch (e) {
+    console.error("Save error:", e);
+    return { success: false, message: e.message };
+  }
+}
+
 
     function createTimeline() {
       const timeline = [];
@@ -123,7 +129,7 @@
         stimulus: `
           <div class="welcome-card">
             <h1>Shadow Color Perception Experiment</h1>
-            <p>Kkk Thank you for participating in this color perception study.</p>
+            <p>ooo Thank you for participating in this color perception study.</p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
           </div>`,
         choices: ['Begin']
