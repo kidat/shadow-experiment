@@ -92,7 +92,7 @@
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1BKGeBteNkWhCnvFAAGEnOzELx1_0h4QrmqFWMRc99AZ7JA4cyms87hYWxjYzB8GrMg/exec";
 
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
-    const images = Array.from({ length: 15 }, (_, i) => `${repoBase}images/${i + 1}.png`);
+    const images = Array.from({ length: 5 }, (_, i) => `${repoBase}images/${i + 1}.png`);
 
     const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
 
@@ -129,7 +129,7 @@
         stimulus: `
           <div class="welcome-card">
             <h1>Shadow Color Perception Experiment</h1>
-            <p>oops Thank you for participating in this color perception study.</p>
+            <p>ewwww Thank you for participating in this color perception study.</p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
           </div>`,
         choices: ['Begin']
@@ -315,24 +315,34 @@ timeline.push({
         </div>`;
     }
 
-    const { saveResult, participantID } = globalData;
+    const saveResult = jsPsych.data.get().properties().saveResult;
+const participantID = jsPsych.data.get().properties().participantID;
 
-    if (saveResult.success) {
-      return `
-        <div class="welcome-card">
-          <h2>Thank You!</h2>
-          <p>Responses saved successfully for participant ${participantID}.</p>
-          <p>You may now close this window or restart the experiment.</p>
-        </div>`;
-    } else {
-      return `
-        <div class="welcome-card">
-          <h2 class="error-message">Data Save Error</h2>
-          <p>${saveResult.message}</p>
-          <p>Please contact the researcher with your participant ID: ${participantID}</p>
-          <p>We'll save your data locally as a backup.</p>
-        </div>`;
-    }
+if (!saveResult) {
+  return `
+    <div class="welcome-card">
+      <h2 class="error-message">Internal Error</h2>
+      <p>Could not retrieve save result.</p>
+    </div>`;
+}
+
+if (saveResult.success) {
+  return `
+    <div class="welcome-card">
+      <h2>Thank You!</h2>
+      <p>Responses saved successfully for participant ${participantID}.</p>
+      <p>You may now close this window or restart the experiment.</p>
+    </div>`;
+} else {
+  return `
+    <div class="welcome-card">
+      <h2 class="error-message">Data Save Error</h2>
+      <p>${saveResult.message}</p>
+      <p>Please contact the researcher with your participant ID: ${participantID}</p>
+      <p>We'll save your data locally as a backup.</p>
+    </div>`;
+}
+
   },
   choices: ['Repeat Experiment', 'Exit'],
   on_finish: data => {
