@@ -89,34 +89,29 @@
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
     const IMAGES_BRANCH = "main";
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1BKGeBteNkWhCnvFAAGEnOzELx1_0h4QrmqFWMRc99AZ7JA4cyms87hYWxjYzB8GrMg/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOXn4a4WJEl6UN-Wxvl8OXT5BZM6twLXF2zp1fChzFy6vGUE0kTqfifDvqNgv8PndDpQ/exec";
 
     const repoBase = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${IMAGES_BRANCH}/`;
     const images = Array.from({ length: 5 }, (_, i) => `${repoBase}images/${i + 1}.png`);
 
     const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
 
-   async function saveToGoogleSheets(participantID, trialsData) {
+  async function saveToGoogleSheets(participantID, trialsData) {
   try {
-    const response = await fetch(GOOGLE_SCRIPT_URL, {
+    await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
+      mode: 'no-cors', // <- important: bypass CORS restrictions, but no response body
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ participantID, trials: trialsData })
-      // ✅ Remove mode: "no-cors"
     });
-
-    // ✅ Check if response is OK and readable
-    if (!response.ok) {
-      throw new Error(`Server returned ${response.status}`);
-    }
-
-    const result = await response.json();
-    return result;
+    // We can't check response due to no-cors mode, so assume success
+    return { success: true, message: "Data sent (no response due to no-cors mode)" };
   } catch (e) {
     console.error("Save error:", e);
     return { success: false, message: e.message };
   }
 }
+
 
 
     function createTimeline() {
@@ -129,7 +124,7 @@
         stimulus: `
           <div class="welcome-card">
             <h1>Shadow Color Perception Experiment</h1>
-            <p>ewwww Thank you for participating in this color perception study.</p>
+            <p>wow Thank you for participating in this color perception study.</p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
           </div>`,
         choices: ['Begin']
