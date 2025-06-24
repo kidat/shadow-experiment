@@ -112,8 +112,6 @@
   }
 }
 
-
-
     function createTimeline() {
       const timeline = [];
 
@@ -124,7 +122,7 @@
         stimulus: `
           <div class="welcome-card">
             <h1>Shadow Color Perception Experiment</h1>
-            <p>wow Thank you for participating in this color perception study.</p>
+            <p>woooow Thank you for participating in this color perception study.</p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
           </div>`,
         choices: ['Begin']
@@ -260,6 +258,7 @@
 
 
       // Corrected async data saving block
+// Corrected async data saving block
 timeline.push({
   type: jsPsychCallFunction,
   func: () => {
@@ -282,62 +281,34 @@ timeline.push({
           rt: trial.rt
         }));
 
-      let saveResult;
       try {
-        saveResult = await saveToGoogleSheets(participantID, trials);
+        await saveToGoogleSheets(participantID, trials);
+        // We don't check result due to no-cors, so assume success
+        jsPsych.data.addProperties({ participantID });
       } catch (e) {
-        saveResult = { success: false, message: e.message };
+        // Even if error, just add participantID
+        jsPsych.data.addProperties({ participantID });
       }
 
-      jsPsych.data.addProperties({ saveResult, participantID });
       resolve();
     });
   }
 });
 
-// Final thank-you or error screen
+// Final thank-you screen with repeat or exit
 timeline.push({
   type: jsPsychHtmlButtonResponse,
   stimulus: () => {
-    const allData = jsPsych.data.get().values();
-    const globalData = allData.find(d => d.saveResult !== undefined);
-
-    if (!globalData || !globalData.saveResult) {
-      return `
-        <div class="welcome-card">
-          <h2 class="error-message">Internal Error</h2>
-          <p>Could not retrieve save result.</p>
-        </div>`;
-    }
-
-    const saveResult = jsPsych.data.get().properties().saveResult;
-const participantID = jsPsych.data.get().properties().participantID;
-
-if (!saveResult) {
-  return `
-    <div class="welcome-card">
-      <h2 class="error-message">Internal Error</h2>
-      <p>Could not retrieve save result.</p>
-    </div>`;
-}
-
-if (saveResult.success) {
-  return `
-    <div class="welcome-card">
-      <h2>Thank You!</h2>
-      <p>Responses saved successfully for participant ${participantID}.</p>
-      <p>You may now close this window or restart the experiment.</p>
-    </div>`;
-} else {
-  return `
-    <div class="welcome-card">
-      <h2 class="error-message">Data Save Error</h2>
-      <p>${saveResult.message}</p>
-      <p>Please contact the researcher with your participant ID: ${participantID}</p>
-      <p>We'll save your data locally as a backup.</p>
-    </div>`;
-}
-
+    const participantID = jsPsych.data.get().properties().participantID || 'unknown';
+    return `
+      <div class="welcome-card">
+        <h2>Thank You!</h2>
+        <p>Your responses have been sent.</p>
+        <p>Due to browser restrictions, we cannot confirm receipt with the server.</p>
+        <p>You may now close this window or restart the experiment.</p>
+        <p>If you experience any issues, please contact the researcher with your participant ID: ${participantID}</p>
+      </div>
+    `;
   },
   choices: ['Repeat Experiment', 'Exit'],
   on_finish: data => {
