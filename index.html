@@ -145,7 +145,7 @@
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="welcome-card">
-            <h2>Phase 1: Assessment of Shadow Brightness Differences</h2>
+            <h2>Phase 1: Shadow Brightness Differences</h2>
             <p>You will see two images side by side.</p>
             <p><strong>Choose the image with the brighter shadow</strong></p>
             <p>You will complete ${Math.floor(images.length / 5) * 4} comparisons.</p>
@@ -170,9 +170,9 @@
               <img src="${pair[0]}" />
               <img src="${pair[1]}" />
             </div>
-            <p>Which shadow appears brighter?</p>
+            <p> Which image has the brighter shadow?</p>
           `,
-          choices: ['Left Shadow', 'Same', 'Right Shadow'],
+          choices: ['Left Image', 'Same', 'Right Image'],
           data: {
             phase: 'phase1',
             image_left: pair[0].split('/').pop(),
@@ -193,6 +193,7 @@
           <div class="welcome-card">
             <h2>Phase 2: Color Difference</h2>
             <p>Again, you’ll see image pairs.</p>
+            <p><strong>Decide if the shadows appear to differ in color.</strong></p>
             <p><strong>Decide if the shadows appear to differ in color.</strong></p>
           </div>`,
         choices: ['Start Phase 2'],
@@ -230,7 +231,7 @@
           <div class="welcome-card">
             <h2>Phase 3: Shadow Intensity</h2>
             <p>You'll see single images with two shadows.</p>
-            <p><strong>Choose which shadow looks brighter.</strong></p>
+            <p><strong>Please select which shadow appears brighter.</strong></p>
           </div>`,
         choices: ['Begin Phase 3'],
         data: { phase: 'phase3_instructions' },
