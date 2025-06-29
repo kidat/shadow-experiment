@@ -154,34 +154,56 @@
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
+      // Create pairs with randomized left/right positions
       const selectedPairs = [];
       for (let i = 0; i < images.length; i += 5) {
         const block = images.slice(i, i + 5);
         for (let j = 0; j < block.length - 1; j++) {
-          selectedPairs.push([block[j], block[j + 1]]);
+          const imageA = block[j];
+          const imageB = block[j + 1];
+          
+          // Randomize which image goes left/right
+          const flip = Math.random() < 0.5;
+          
+          selectedPairs.push({
+            displayPair: flip ? [imageB, imageA] : [imageA, imageB],
+            originalPair: [imageA, imageB], // Always in consecutive order
+            flipped: flip
+          });
         }
       }
 
-      selectedPairs.forEach(pair => {
+      // Phase 1 trials
+      selectedPairs.forEach(pairObj => {
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
+              <img src="${pairObj.displayPair[0]}" />
+              <img src="${pairObj.displayPair[1]}" />
             </div>
-            <p> Which image has the brighter shadow?</p>
+            <p>Which image has the brighter shadow?</p>
           `,
           choices: ['Left Image', 'Same', 'Right Image'],
           data: {
             phase: 'phase1',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
+            image_left: pairObj.displayPair[0].split('/').pop(),
+            image_right: pairObj.displayPair[1].split('/').pop(),
+            original_first: pairObj.originalPair[0].split('/').pop(),
+            original_second: pairObj.originalPair[1].split('/').pop(),
+            flipped: pairObj.flipped
           },
           post_trial_gap: 500,
           on_finish: data => {
-            const labels = ['left', 'same', 'right'];
-            data.response = labels[data.response];
+            if (data.response === 1) { // Same selected
+              data.response = 'same';
+            } else if (!data.flipped) { 
+              // Not flipped: display order = saved order
+              data.response = data.response === 0 ? 'left' : 'right';
+            } else { 
+              // Flipped: display order ≠ saved order
+              data.response = data.response === 0 ? 'right' : 'left';
+            }
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -192,7 +214,7 @@
         stimulus: `
           <div class="welcome-card">
             <h2>Phase 2: Color Difference</h2>
-            <p>Again, you’ll see image pairs.</p>
+            <p>Again, you'll see image pairs.</p>
             <p><strong>Decide if the shadows appear to differ in color.</strong></p>
           </div>`,
         choices: ['Start Phase 2'],
@@ -200,21 +222,25 @@
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
-      selectedPairs.forEach(pair => {
+      // Phase 2 trials (using same pairs with same randomization)
+      selectedPairs.forEach(pairObj => {
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
+              <img src="${pairObj.displayPair[0]}" />
+              <img src="${pairObj.displayPair[1]}" />
             </div>
             <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
           `,
           choices: ['Yes', 'No'],
           data: {
             phase: 'phase2',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
+            image_left: pairObj.displayPair[0].split('/').pop(),
+            image_right: pairObj.displayPair[1].split('/').pop(),
+            original_first: pairObj.originalPair[0].split('/').pop(),
+            original_second: pairObj.originalPair[1].split('/').pop(),
+            flipped: pairObj.flipped
           },
           post_trial_gap: 500,
           on_finish: data => {
@@ -256,7 +282,8 @@
           }
         });
       });
-     // async data saving block
+
+      // async data saving block
       timeline.push({
         type: jsPsychCallFunction,
         func: () => {
@@ -277,6 +304,8 @@
                 image_left: trial.image_left || '',
                 image_right: trial.image_right || '',
                 image: trial.image || '',
+                original_first: trial.original_first || '',
+                original_second: trial.original_second || '',
                 response: trial.response,
                 rt: trial.rt
               }));
