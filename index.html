@@ -153,110 +153,98 @@
         choices: ['Start Comparing'],
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
-
-      const selectedPairs = [];
-      for (let i = 0; i < images.length; i += 5) {
-        const block = images.slice(i, i + 5);
-        for (let j = 0; j < block.length - 1; j++) {
-          selectedPairs.push([block[j], block[j + 1]]);
-        }
+// PHASE 1: Randomize display but save in consistent order
+selectedPairs.forEach(pair => {
+  // Randomly decide which image goes left vs right for DISPLAY
+  const showFirstImageOnLeft = Math.random() < 0.5;
+  const leftImage = showFirstImageOnLeft ? pair[0] : pair[1];
+  const rightImage = showFirstImageOnLeft ? pair[1] : pair[0];
+  
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="display: flex; justify-content: center; gap: 50px;">
+        <img src="${leftImage}" />
+        <img src="${rightImage}" />
+      </div>
+      <p>Which image has the brighter shadow?</p>
+    `,
+    choices: ['Left Image', 'Same', 'Right Image'],
+    data: {
+      phase: 'phase1',
+      // ALWAYS save in original consecutive order
+      image_left: pair[0].split('/').pop(),   // Always first image (e.g., 1.png)
+      image_right: pair[1].split('/').pop(),  // Always second image (e.g., 2.png)
+      // Track display order for response mapping
+      display_swapped: !showFirstImageOnLeft
+    },
+    post_trial_gap: 500,
+    on_finish: data => {
+      // Map visual response to consistent data position
+      if (data.response === 1) { // Same
+        data.response = 'same';
+      } else if (data.response === 0) { // Left button clicked
+        // If display was swapped: left=2.png, so response="right" (2.png position in 1,2 order)
+        // If display normal: left=1.png, so response="left" (1.png position in 1,2 order)
+        data.response = data.display_swapped ? 'right' : 'left';
+      } else if (data.response === 2) { // Right button clicked
+        // If display was swapped: right=1.png, so response="left" (1.png position in 1,2 order)
+        // If display normal: right=2.png, so response="right" (2.png position in 1,2 order)
+        data.response = data.display_swapped ? 'left' : 'right';
       }
-
-      selectedPairs.forEach(pair => {
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
-            </div>
-            <p> Which image has the brighter shadow?</p>
-          `,
-          choices: ['Left Image', 'Same', 'Right Image'],
-          data: {
-            phase: 'phase1',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
-          },
-          post_trial_gap: 500,
-          on_finish: data => {
-            const labels = ['left', 'same', 'right'];
-            data.response = labels[data.response];
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
-      });
-
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `
-          <div class="welcome-card">
-            <h2>Phase 2: Color Difference</h2>
-            <p>Again, you’ll see image pairs.</p>
-            <p><strong>Decide if the shadows appear to differ in color.</strong></p>
-          </div>`,
-        choices: ['Start Phase 2'],
-        data: { phase: 'phase2_instructions' },
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
-      });
-
-      selectedPairs.forEach(pair => {
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
-            </div>
-            <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
-          `,
-          choices: ['Yes', 'No'],
-          data: {
-            phase: 'phase2',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
-          },
-          post_trial_gap: 500,
-          on_finish: data => {
-            data.response = data.response === 0 ? 'yes' : 'no';
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
-      });
-
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `
-          <div class="welcome-card">
-            <h2>Phase 3: Shadow Intensity</h2>
-            <p>You'll see single images with two shadows.</p>
-            <p><strong>Please select which shadow appears brighter.</strong></p>
-          </div>`,
-        choices: ['Begin Phase 3'],
-        data: { phase: 'phase3_instructions' },
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
-      });
       
-      images.forEach(img => {
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div style="display: flex; justify-content: center;">
-              <img src="${img}" />
-            </div>
-            <p>Which shadow looks brighter?</p>
-          `,
-          choices: ['Left Shadow', 'Same', 'Right Shadow'],
-          data: { phase: 'phase3', image: img.split('/').pop() },
-          post_trial_gap: 500,
-          on_finish: data => {
-            const labels = ['left', 'same', 'right'];
-            data.response = labels[data.response];
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
-      });
-     // async data saving block
+      jsPsych.getDisplayElement().innerHTML = '';
+    }
+  });
+});
+
+// Phase 2 instructions (unchanged)
+timeline.push({
+  type: jsPsychHtmlButtonResponse,
+  stimulus: `
+    <div class="welcome-card">
+      <h2>Phase 2: Color Difference</h2>
+      <p>Again, you'll see image pairs.</p>
+      <p><strong>Decide if the shadows appear to differ in color.</strong></p>
+    </div>`,
+  choices: ['Start Phase 2'],
+  data: { phase: 'phase2_instructions' },
+  on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+});
+
+// PHASE 2: Same logic for color difference
+selectedPairs.forEach(pair => {
+  // NEW random decision for Phase 2 (independent of Phase 1)
+  const showFirstImageOnLeft = Math.random() < 0.5;
+  const leftImage = showFirstImageOnLeft ? pair[0] : pair[1];
+  const rightImage = showFirstImageOnLeft ? pair[1] : pair[0];
+  
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="display: flex; justify-content: center; gap: 50px;">
+        <img src="${leftImage}" />
+        <img src="${rightImage}" />
+      </div>
+      <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
+    `,
+    choices: ['Yes', 'No'],
+    data: {
+      phase: 'phase2',
+      // ALWAYS save in original consecutive order
+      image_left: pair[0].split('/').pop(),   // Always first image
+      image_right: pair[1].split('/').pop(),  // Always second image
+      // Track display order (for analysis)
+      display_swapped: !showFirstImageOnLeft
+    },
+    post_trial_gap: 500,
+    on_finish: data => {
+      // Phase 2 is Yes/No, so no position mapping needed
+      data.response = data.response === 0 ? 'yes' : 'no';
+      jsPsych.getDisplayElement().innerHTML = '';
+    }
+  });
+});     // async data saving block
       timeline.push({
         type: jsPsychCallFunction,
         func: () => {
