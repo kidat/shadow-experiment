@@ -121,7 +121,7 @@
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="welcome-card">
-            <h1>Shadow Color Perception Experiment Testing</h1>
+            <h1>Shadow Color Perception Experiment</h1>
             <p>Thank you for participating in this color perception study.</p>
             <p><strong>Estimated time: 15 minutes</strong></p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
@@ -162,88 +162,83 @@
         }
       }
 
-      selectedPairs.forEach(pair => {
-        const [imgA, imgB] = pair;
-        const orderedPair = [imgA, imgB];
-        const flip = Math.random() < 0.5;
-        const leftImg = flip ? imgB : imgA;
-        const rightImg = flip ? imgA : imgB;
+     selectedPairs.forEach(pair => {
+  const sortedPair = [...pair].sort(); // ensure logical order (e.g., 6.png, 7.png)
+  const [image_A, image_B] = sortedPair;
+  const flip = Math.random() < 0.5;
+  const leftImg = flip ? image_B : image_A;
+  const rightImg = flip ? image_A : image_B;
 
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${leftImg}" />
-              <img src="${rightImg}" />
-            </div>
-            <p> Which image has the brighter shadow?</p>
-          `,
-          choices: ['Left Image', 'Same', 'Right Image'],
-          data: {
-            phase: 'phase1',
-            image_left: leftImg.split('/').pop(),
-            image_right: rightImg.split('/').pop(),
-            image_A: orderedPair[0].split('/').pop(),
-            image_B: orderedPair[1].split('/').pop(),
-            left_image: leftImg,
-            right_image: rightImg
-          },
-          post_trial_gap: 500,
-          on_finish: data => {
-            const labels = ['left', 'same', 'right'];
-            const clickedLabel = labels[data.response];
-            let clickedImg = null;
-            if (clickedLabel === 'left') clickedImg = data.left_image;
-            else if (clickedLabel === 'right') clickedImg = data.right_image;
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="display: flex; justify-content: center; gap: 50px;">
+        <img src="${leftImg}" />
+        <img src="${rightImg}" />
+      </div>
+      <p> Which image has the brighter shadow?</p>
+    `,
+    choices: ['Left Image', 'Same', 'Right Image'],
+    data: {
+      phase: 'phase1',
+      image_left: leftImg.split('/').pop(),
+      image_right: rightImg.split('/').pop(),
+      image_A: image_A.split('/').pop(),
+      image_B: image_B.split('/').pop()
+    },
+    post_trial_gap: 500,
+    on_finish: data => {
+      const labels = ['left', 'same', 'right'];
+      const clickedLabel = labels[data.response];
+      const clickedImg = clickedLabel === 'left' ? data.image_left
+                         : clickedLabel === 'right' ? data.image_right
+                         : null;
 
-            if (clickedLabel === 'same') {
-              data.response = 'same';
-            } else if (clickedImg === pair[0]) {
-              data.response = 'left';
-            } else if (clickedImg === pair[1]) {
-              data.response = 'right';
-            } else {
-              data.response = 'error';
-            }
+      if (clickedLabel === 'same') {
+        data.response = 'same';
+      } else if (clickedImg === data.image_A) {
+        data.response = 'left';
+      } else if (clickedImg === data.image_B) {
+        data.response = 'right';
+      } else {
+        data.response = 'error';
+      }
 
-            delete data.left_image;
-            delete data.right_image;
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
-      });
+      jsPsych.getDisplayElement().innerHTML = '';
+    }
+  });
+});
+selectedPairs.forEach(pair => {
+  const sortedPair = [...pair].sort();
+  const [image_A, image_B] = sortedPair;
+  const flip = Math.random() < 0.5;
+  const leftImg = flip ? image_B : image_A;
+  const rightImg = flip ? image_A : image_B;
 
-      selectedPairs.forEach(pair => {
-        const [imgA, imgB] = pair;
-        const orderedPair = [imgA, imgB];
-        const flip = Math.random() < 0.5;
-        const leftImg = flip ? imgB : imgA;
-        const rightImg = flip ? imgA : imgB;
-
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${leftImg}" />
-              <img src="${rightImg}" />
-            </div>
-            <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
-          `,
-          choices: ['Yes', 'No'],
-          data: {
-            phase: 'phase2',
-            image_left: leftImg.split('/').pop(),
-            image_right: rightImg.split('/').pop(),
-            image_A: orderedPair[0].split('/').pop(),
-            image_B: orderedPair[1].split('/').pop()
-          },
-          post_trial_gap: 500,
-          on_finish: data => {
-            data.response = data.response === 0 ? 'yes' : 'no';
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
-      });
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="display: flex; justify-content: center; gap: 50px;">
+        <img src="${leftImg}" />
+        <img src="${rightImg}" />
+      </div>
+      <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
+    `,
+    choices: ['Yes', 'No'],
+    data: {
+      phase: 'phase2',
+      image_left: leftImg.split('/').pop(),
+      image_right: rightImg.split('/').pop(),
+      image_A: image_A.split('/').pop(),
+      image_B: image_B.split('/').pop()
+    },
+    post_trial_gap: 500,
+    on_finish: data => {
+      data.response = data.response === 0 ? 'yes' : 'no';
+      jsPsych.getDisplayElement().innerHTML = '';
+    }
+  });
+});
 
       timeline.push({
         type: jsPsychHtmlButtonResponse,
