@@ -121,7 +121,7 @@
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="welcome-card">
-            <h1>Shadow Color Perception Experiment</h1>
+            <h1>Shadow Color Perception Experiment testing</h1>
             <p>Thank you for participating in this color perception study.</p>
             <p><strong>Estimated time: 15 minutes</strong></p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
@@ -189,21 +189,27 @@
             phase: 'phase1',
             image_left: pairObj.displayPair[0].split('/').pop(),
             image_right: pairObj.displayPair[1].split('/').pop(),
-            original_first: pairObj.originalPair[0].split('/').pop(),
-            original_second: pairObj.originalPair[1].split('/').pop(),
+            image_first: pairObj.originalPair[0].split('/').pop(),
+            image_second: pairObj.originalPair[1].split('/').pop(),
             flipped: pairObj.flipped
           },
           post_trial_gap: 500,
           on_finish: data => {
+            // Convert response to original order (first vs second)
             if (data.response === 1) { // Same selected
-              data.response = 'same';
+              data.response_original_order = 'same';
             } else if (!data.flipped) { 
-              // Not flipped: display order = saved order
-              data.response = data.response === 0 ? 'left' : 'right';
+              // Not flipped: left=first, right=second
+              data.response_original_order = data.response === 0 ? 'first' : 'second';
             } else { 
-              // Flipped: display order ≠ saved order
-              data.response = data.response === 0 ? 'right' : 'left';
+              // Flipped: left=second, right=first
+              data.response_original_order = data.response === 0 ? 'second' : 'first';
             }
+            
+            // Keep display response for reference
+            const displayLabels = ['left', 'same', 'right'];
+            data.response_display = displayLabels[data.response];
+            
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -238,13 +244,14 @@
             phase: 'phase2',
             image_left: pairObj.displayPair[0].split('/').pop(),
             image_right: pairObj.displayPair[1].split('/').pop(),
-            original_first: pairObj.originalPair[0].split('/').pop(),
-            original_second: pairObj.originalPair[1].split('/').pop(),
+            image_first: pairObj.originalPair[0].split('/').pop(),
+            image_second: pairObj.originalPair[1].split('/').pop(),
             flipped: pairObj.flipped
           },
           post_trial_gap: 500,
           on_finish: data => {
-            data.response = data.response === 0 ? 'yes' : 'no';
+            data.response_original_order = data.response === 0 ? 'yes' : 'no';
+            data.response_display = data.response === 0 ? 'yes' : 'no';
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -277,7 +284,8 @@
           post_trial_gap: 500,
           on_finish: data => {
             const labels = ['left', 'same', 'right'];
-            data.response = labels[data.response];
+            data.response_original_order = labels[data.response];
+            data.response_display = labels[data.response];
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -297,16 +305,17 @@
             // Add participantID early so it's available later
             jsPsych.data.addProperties({ participantID });
             const trials = jsPsych.data.get()
-              .filter(trial => trial.phase)
+              .filter(trial => trial.phase && !trial.phase.includes('instructions'))
               .values()
               .map(trial => ({
                 phase: trial.phase,
-                image_left: trial.image_left || '',
-                image_right: trial.image_right || '',
-                image: trial.image || '',
-                original_first: trial.original_first || '',
-                original_second: trial.original_second || '',
-                response: trial.response,
+                image_first: trial.image_first || trial.image || '',
+                image_second: trial.image_second || '',
+                image_left_display: trial.image_left || '',
+                image_right_display: trial.image_right || '',
+                response_original_order: trial.response_original_order,
+                response_display: trial.response_display,
+                flipped: trial.flipped || false,
                 rt: trial.rt
               }));
       
