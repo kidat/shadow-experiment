@@ -99,7 +99,7 @@
       try {
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
-          mode: 'no-cors', // bypass CORS restrictions; no response
+          mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ participantID, trials: trialsData })
         });
@@ -152,6 +152,7 @@
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
+      // create pairs for phases 1 and 2
       const selectedPairs = [];
       for (let i = 0; i < images.length; i += 5) {
         const block = images.slice(i, i + 5);
@@ -161,46 +162,49 @@
       }
 
       // Phase 1 trials
-      selectedPairs.forEach(pair => {
-        const shuffled = jsPsych.randomization.shuffle(pair);
-        const imageA = pair[0].split('/').pop();
-        const imageB = pair[1].split('/').pop();
-        const displayLeft = shuffled[0];
-        const displayRight = shuffled[1];
+     // Phase 1 trials
+selectedPairs.forEach(pair => {
+  const shuffled = jsPsych.randomization.shuffle(pair);
+  const imageA = pair[0].split('/').pop();
+  const imageB = pair[1].split('/').pop();
+  const displayLeft = shuffled[0];
+  const displayRight = shuffled[1];
 
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${displayLeft}" />
-              <img src="${displayRight}" />
-            </div>
-            <p>Which image has the brighter shadow?</p>
-          `,
-          choices: ['Left Image', 'Same', 'Right Image'],
-          data: {
-            phase: 'phase1',
-            imageA,
-            imageB,
-            image_left: displayLeft.split('/').pop(),
-            image_right: displayRight.split('/').pop()
-          },
-          post_trial_gap: 500,
-          on_finish: data => {
-            const choice = ['left', 'same', 'right'][data.response];
-            const left = data.image_left;
-            const right = data.image_right;
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="display: flex; justify-content: center; gap: 50px;">
+        <img src="${displayLeft}" />
+        <img src="${displayRight}" />
+      </div>
+      <p>Which image has the brighter shadow?</p>
+    `,
+    choices: ['Left Image', 'Same', 'Right Image'],
+    data: {
+      phase: 'phase1',
+      imageA,
+      imageB,
+      image_left: displayLeft.split('/').pop(),
+      image_right: displayRight.split('/').pop()
+    },
+    post_trial_gap: 500,
+    on_finish: data => {
+      const choice = ['left', 'same', 'right'][data.response];
+      const left = data.image_left;
+      const right = data.image_right;
 
-            let normalized;
-            if (choice === 'same') normalized = 'same';
-            else if ((choice === 'left' && left === imageA) || (choice === 'right' && right === imageA)) normalized = 'imageA';
-            else normalized = 'imageB';
-
-            data.normalized_response = normalized;
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
-      });
+      // Normalize response to 'imageA', 'imageB', or 'same' based on which image is left/right
+      if (choice === 'same') {
+        data.normalized_response = 'same';
+      } else if ((choice === 'left' && left === imageA) || (choice === 'right' && right === imageA)) {
+        data.normalized_response = 'imageA';
+      } else {
+        data.normalized_response = 'imageB';
+      }
+      jsPsych.getDisplayElement().innerHTML = '';
+    }
+  });
+});
 
       // Phase 2 trials
       selectedPairs.forEach(pair => {
@@ -248,6 +252,7 @@
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
+      // Phase 3 trials
       images.forEach(img => {
         timeline.push({
           type: jsPsychHtmlButtonResponse,
@@ -262,7 +267,7 @@
           post_trial_gap: 500,
           on_finish: data => {
             const labels = ['left', 'same', 'right'];
-            data.response = labels[data.response];
+            data.normalized_response = labels[data.response];
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -289,6 +294,7 @@
                 image_right: trial.image_right || '',
                 image: trial.image || '',
                 response: trial.response,
+                normalized_response: trial.normalized_response || '',
                 rt: trial.rt
               }));
 
@@ -302,7 +308,6 @@
         }
       });
 
-      // Thank you screen with option to repeat or exit
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: () => {
@@ -321,9 +326,7 @@
         choices: ['Repeat Experiment', 'Exit'],
         on_finish: data => {
           if (data.response === 0) {
-            window.location.reload();
-          } else {
-            jsPsych.endExperiment('Thank you for participating!');
+            jsPsych.reset();
           }
         }
       });
@@ -331,11 +334,7 @@
       return timeline;
     }
 
-    function runExperiment() {
-      jsPsych.run(createTimeline());
-    }
-
-    runExperiment();
+    jsPsych.run(createTimeline());
   </script>
 </body>
 </html>
