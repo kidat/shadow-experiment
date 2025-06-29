@@ -84,6 +84,7 @@
   <div id="jspsych-target"></div>
 
   <script>
+
     // --- CONFIG ---
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
@@ -95,20 +96,21 @@
 
     const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
 
-    async function saveToGoogleSheets(participantID, trialsData) {
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ participantID, trials: trialsData })
-        });
-        return { success: true, message: "Data sent (no response due to no-cors mode)" };
-      } catch (e) {
-        console.error("Save error:", e);
-        return { success: false, message: e.message };
-      }
-    }
+  async function saveToGoogleSheets(participantID, trialsData) {
+  try {
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors', // <- important: bypass CORS restrictions, but no response body
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participantID, trials: trialsData })
+    });
+    // We can't check response 
+    return { success: true, message: "Data sent (no response due to no-cors mode)" };
+  } catch (e) {
+    console.error("Save error:", e);
+    return { success: false, message: e.message };
+  }
+}
 
     function createTimeline() {
       const timeline = [];
@@ -119,7 +121,7 @@
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="welcome-card">
-            <h1>Shadow Color Perception Experiment testing</h1>
+            <h1>Shadow Color Perception Experiment</h1>
             <p>Thank you for participating in this color perception study.</p>
             <p><strong>Estimated time: 15 minutes</strong></p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
@@ -152,7 +154,6 @@
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
-      // create pairs for phases 1 and 2
       const selectedPairs = [];
       for (let i = 0; i < images.length; i += 5) {
         const block = images.slice(i, i + 5);
@@ -161,79 +162,63 @@
         }
       }
 
-      // Phase 1 trials
-     // Phase 1 trials
-selectedPairs.forEach(pair => {
-  const shuffled = jsPsych.randomization.shuffle(pair);
-  const imageA = pair[0].split('/').pop();
-  const imageB = pair[1].split('/').pop();
-  const displayLeft = shuffled[0];
-  const displayRight = shuffled[1];
-
-  timeline.push({
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div style="display: flex; justify-content: center; gap: 50px;">
-        <img src="${displayLeft}" />
-        <img src="${displayRight}" />
-      </div>
-      <p>Which image has the brighter shadow?</p>
-    `,
-    choices: ['Left Image', 'Same', 'Right Image'],
-    data: {
-      phase: 'phase1',
-      imageA,
-      imageB,
-      image_left: displayLeft.split('/').pop(),
-      image_right: displayRight.split('/').pop()
-    },
-    post_trial_gap: 500,
-    on_finish: data => {
-      const choice = ['left', 'same', 'right'][data.response];
-      const left = data.image_left;
-      const right = data.image_right;
-
-      // Normalize response to 'imageA', 'imageB', or 'same' based on which image is left/right
-      if (choice === 'same') {
-        data.normalized_response = 'same';
-      } else if ((choice === 'left' && left === imageA) || (choice === 'right' && right === imageA)) {
-        data.normalized_response = 'imageA';
-      } else {
-        data.normalized_response = 'imageB';
-      }
-      jsPsych.getDisplayElement().innerHTML = '';
-    }
-  });
-});
-
-      // Phase 2 trials
       selectedPairs.forEach(pair => {
-        const shuffled = jsPsych.randomization.shuffle(pair);
-        const imageA = pair[0].split('/').pop();
-        const imageB = pair[1].split('/').pop();
-        const displayLeft = shuffled[0];
-        const displayRight = shuffled[1];
-
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${displayLeft}" />
-              <img src="${displayRight}" />
+              <img src="${pair[0]}" />
+              <img src="${pair[1]}" />
             </div>
-            <p><strong>Do you see a color difference between the shadows?</strong></p>
+            <p> Which image has the brighter shadow?</p>
+          `,
+          choices: ['Left Image', 'Same', 'Right Image'],
+          data: {
+            phase: 'phase1',
+            image_left: pair[0].split('/').pop(),
+            image_right: pair[1].split('/').pop()
+          },
+          post_trial_gap: 500,
+          on_finish: data => {
+            const labels = ['left', 'same', 'right'];
+            data.response = labels[data.response];
+            jsPsych.getDisplayElement().innerHTML = '';
+          }
+        });
+      });
+
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <div class="welcome-card">
+            <h2>Phase 2: Color Difference</h2>
+            <p>Again, you’ll see image pairs.</p>
+            <p><strong>Decide if the shadows appear to differ in color.</strong></p>
+          </div>`,
+        choices: ['Start Phase 2'],
+        data: { phase: 'phase2_instructions' },
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+      });
+
+      selectedPairs.forEach(pair => {
+        timeline.push({
+          type: jsPsychHtmlButtonResponse,
+          stimulus: `
+            <div style="display: flex; justify-content: center; gap: 50px;">
+              <img src="${pair[0]}" />
+              <img src="${pair[1]}" />
+            </div>
+            <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
           `,
           choices: ['Yes', 'No'],
           data: {
             phase: 'phase2',
-            imageA,
-            imageB,
-            image_left: displayLeft.split('/').pop(),
-            image_right: displayRight.split('/').pop()
+            image_left: pair[0].split('/').pop(),
+            image_right: pair[1].split('/').pop()
           },
           post_trial_gap: 500,
           on_finish: data => {
-            data.normalized_response = data.response === 0 ? 'yes' : 'no';
+            data.response = data.response === 0 ? 'yes' : 'no';
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -251,8 +236,7 @@ selectedPairs.forEach(pair => {
         data: { phase: 'phase3_instructions' },
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
-
-      // Phase 3 trials
+      
       images.forEach(img => {
         timeline.push({
           type: jsPsychHtmlButtonResponse,
@@ -267,13 +251,12 @@ selectedPairs.forEach(pair => {
           post_trial_gap: 500,
           on_finish: data => {
             const labels = ['left', 'same', 'right'];
-            data.normalized_response = labels[data.response];
+            data.response = labels[data.response];
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
       });
-
-      // Save data async
+     // async data saving block
       timeline.push({
         type: jsPsychCallFunction,
         func: () => {
@@ -281,9 +264,10 @@ selectedPairs.forEach(pair => {
             const form = jsPsych.data.get()
               .filter({ trial_type: 'survey-html-form' })
               .values()[0];
-
+      
             const participantID = form?.response?.participant_id || 'unknown';
-
+      
+            // Add participantID early so it's available later
             jsPsych.data.addProperties({ participantID });
             const trials = jsPsych.data.get()
               .filter(trial => trial.phase)
@@ -294,23 +278,24 @@ selectedPairs.forEach(pair => {
                 image_right: trial.image_right || '',
                 image: trial.image || '',
                 response: trial.response,
-                normalized_response: trial.normalized_response || '',
                 rt: trial.rt
               }));
-
+      
             try {
               await saveToGoogleSheets(participantID, trials);
+              // no-cors mode means no response checking possible
             } catch (e) {
-              console.error(e);
             }
             resolve();
           });
         }
       });
-
+      
+      // Final thank-you screen with repeat or exit
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: () => {
+          // Get participantID from data properties
           const allData = jsPsych.data.get().values();
           const participantData = allData.find(d => d.participantID !== undefined) || {};
           const participantID = participantData.participantID || 'unknown';
@@ -323,18 +308,21 @@ selectedPairs.forEach(pair => {
             </div>
           `;
         },
-        choices: ['Repeat Experiment', 'Exit'],
-        on_finish: data => {
-          if (data.response === 0) {
-            jsPsych.reset();
-          }
+       choices: ['Repeat Experiment', 'Exit'],
+      on_finish: data => {
+        if (data.response === 0) {
+          window.location.reload();  // reload the entire page to restart experiment
+        } else {
+          jsPsych.endExperiment('Thank you for participating!');
         }
+      }
       });
-
       return timeline;
     }
-
-    jsPsych.run(createTimeline());
+    function runExperiment() {
+      jsPsych.run(createTimeline());
+    }
+    runExperiment();
   </script>
 </body>
 </html>
