@@ -121,7 +121,7 @@
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="welcome-card">
-            <h1>Shadow Color Perception Experiment</h1>
+            <h1>Shadow Color Perception Experiment Testing</h1>
             <p>Thank you for participating in this color perception study.</p>
             <p><strong>Estimated time: 15 minutes</strong></p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
@@ -163,58 +163,79 @@
       }
 
       selectedPairs.forEach(pair => {
+        const [imgA, imgB] = pair;
+        const orderedPair = [imgA, imgB];
+        const flip = Math.random() < 0.5;
+        const leftImg = flip ? imgB : imgA;
+        const rightImg = flip ? imgA : imgB;
+
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
+              <img src="${leftImg}" />
+              <img src="${rightImg}" />
             </div>
             <p> Which image has the brighter shadow?</p>
           `,
           choices: ['Left Image', 'Same', 'Right Image'],
           data: {
             phase: 'phase1',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
+            image_left: leftImg.split('/').pop(),
+            image_right: rightImg.split('/').pop(),
+            image_A: orderedPair[0].split('/').pop(),
+            image_B: orderedPair[1].split('/').pop(),
+            left_image: leftImg,
+            right_image: rightImg
           },
           post_trial_gap: 500,
           on_finish: data => {
             const labels = ['left', 'same', 'right'];
-            data.response = labels[data.response];
+            const clickedLabel = labels[data.response];
+            let clickedImg = null;
+            if (clickedLabel === 'left') clickedImg = data.left_image;
+            else if (clickedLabel === 'right') clickedImg = data.right_image;
+
+            if (clickedLabel === 'same') {
+              data.response = 'same';
+            } else if (clickedImg === pair[0]) {
+              data.response = 'left';
+            } else if (clickedImg === pair[1]) {
+              data.response = 'right';
+            } else {
+              data.response = 'error';
+            }
+
+            delete data.left_image;
+            delete data.right_image;
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
       });
 
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `
-          <div class="welcome-card">
-            <h2>Phase 2: Color Difference</h2>
-            <p>Again, you’ll see image pairs.</p>
-            <p><strong>Decide if the shadows appear to differ in color.</strong></p>
-          </div>`,
-        choices: ['Start Phase 2'],
-        data: { phase: 'phase2_instructions' },
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
-      });
-
       selectedPairs.forEach(pair => {
+        const [imgA, imgB] = pair;
+        const orderedPair = [imgA, imgB];
+        const flip = Math.random() < 0.5;
+        const leftImg = flip ? imgB : imgA;
+        const rightImg = flip ? imgA : imgB;
+
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
+              <img src="${leftImg}" />
+              <img src="${rightImg}" />
             </div>
             <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
           `,
           choices: ['Yes', 'No'],
           data: {
             phase: 'phase2',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
+            image_left: leftImg.split('/').pop(),
+            image_right: rightImg.split('/').pop(),
+            image_A: orderedPair[0].split('/').pop(),
+            image_B: orderedPair[1].split('/').pop()
           },
           post_trial_gap: 500,
           on_finish: data => {
