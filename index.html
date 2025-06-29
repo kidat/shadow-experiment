@@ -154,80 +154,75 @@
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
-      selectedPairs.forEach(([imgA, imgB]) => {
-  const flip = Math.random() < 0.5;
-  const left = flip ? imgB : imgA;
-  const right = flip ? imgA : imgB;
-
-  timeline.push({
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div style="display: flex; justify-content: center; gap: 50px;">
-        <img src="${left}" />
-        <img src="${right}" />
-      </div>
-      <p>Which image has the brighter shadow?</p>
-    `,
-    choices: ['Left Image', 'Same', 'Right Image'],
-    data: {
-      phase: 'phase1',
-      image_left: left.split('/').pop(),
-      image_right: right.split('/').pop(),
-      image_A: imgA.split('/').pop(),
-      image_B: imgB.split('/').pop()
-    },
-    post_trial_gap: 500,
-    on_finish: data => {
-      const labels = ['left', 'same', 'right'];
-      const clickedLabel = labels[data.response];
-      const clickedImg = clickedLabel === 'left' ? data.image_left
-                         : clickedLabel === 'right' ? data.image_right
-                         : 'same';
-
-      if (clickedLabel === 'same') {
-        data.response = 'same';
-      } else if (clickedImg === data.image_A) {
-        data.response = 'left';
-      } else if (clickedImg === data.image_B) {
-        data.response = 'right';
-      } else {
-        data.response = 'error';
+      const selectedPairs = [];
+      for (let i = 0; i < images.length; i += 5) {
+        const block = images.slice(i, i + 5);
+        for (let j = 0; j < block.length - 1; j++) {
+          selectedPairs.push([block[j], block[j + 1]]);
+        }
       }
 
-      jsPsych.getDisplayElement().innerHTML = '';
-    }
-  });
-});
+      selectedPairs.forEach(pair => {
+        timeline.push({
+          type: jsPsychHtmlButtonResponse,
+          stimulus: `
+            <div style="display: flex; justify-content: center; gap: 50px;">
+              <img src="${pair[0]}" />
+              <img src="${pair[1]}" />
+            </div>
+            <p> Which image has the brighter shadow?</p>
+          `,
+          choices: ['Left Image', 'Same', 'Right Image'],
+          data: {
+            phase: 'phase1',
+            image_left: pair[0].split('/').pop(),
+            image_right: pair[1].split('/').pop()
+          },
+          post_trial_gap: 500,
+          on_finish: data => {
+            const labels = ['left', 'same', 'right'];
+            data.response = labels[data.response];
+            jsPsych.getDisplayElement().innerHTML = '';
+          }
+        });
+      });
 
-     selectedPairs.forEach(([imgA, imgB]) => {
-  const flip = Math.random() < 0.5;
-  const left = flip ? imgB : imgA;
-  const right = flip ? imgA : imgB;
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <div class="welcome-card">
+            <h2>Phase 2: Color Difference</h2>
+            <p>Again, you’ll see image pairs.</p>
+            <p><strong>Decide if the shadows appear to differ in color.</strong></p>
+          </div>`,
+        choices: ['Start Phase 2'],
+        data: { phase: 'phase2_instructions' },
+        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+      });
 
-  timeline.push({
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div style="display: flex; justify-content: center; gap: 50px;">
-        <img src="${left}" />
-        <img src="${right}" />
-      </div>
-      <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
-    `,
-    choices: ['Yes', 'No'],
-    data: {
-      phase: 'phase2',
-      image_left: left.split('/').pop(),
-      image_right: right.split('/').pop(),
-      image_A: imgA.split('/').pop(),
-      image_B: imgB.split('/').pop()
-    },
-    post_trial_gap: 500,
-    on_finish: data => {
-      data.response = data.response === 0 ? 'yes' : 'no';
-      jsPsych.getDisplayElement().innerHTML = '';
-    }
-  });
-});
+      selectedPairs.forEach(pair => {
+        timeline.push({
+          type: jsPsychHtmlButtonResponse,
+          stimulus: `
+            <div style="display: flex; justify-content: center; gap: 50px;">
+              <img src="${pair[0]}" />
+              <img src="${pair[1]}" />
+            </div>
+            <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
+          `,
+          choices: ['Yes', 'No'],
+          data: {
+            phase: 'phase2',
+            image_left: pair[0].split('/').pop(),
+            image_right: pair[1].split('/').pop()
+          },
+          post_trial_gap: 500,
+          on_finish: data => {
+            data.response = data.response === 0 ? 'yes' : 'no';
+            jsPsych.getDisplayElement().innerHTML = '';
+          }
+        });
+      });
 
       timeline.push({
         type: jsPsychHtmlButtonResponse,
