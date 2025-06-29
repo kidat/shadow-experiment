@@ -84,7 +84,6 @@
   <div id="jspsych-target"></div>
 
   <script>
-
     // --- CONFIG ---
     const GITHUB_USERNAME = "kidat";
     const GITHUB_REPO = "shadow-experiment";
@@ -96,21 +95,20 @@
 
     const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
 
-  async function saveToGoogleSheets(participantID, trialsData) {
-  try {
-    await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors', // <- important: bypass CORS restrictions, but no response body
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participantID, trials: trialsData })
-    });
-    // We can't check response 
-    return { success: true, message: "Data sent (no response due to no-cors mode)" };
-  } catch (e) {
-    console.error("Save error:", e);
-    return { success: false, message: e.message };
-  }
-}
+    async function saveToGoogleSheets(participantID, trialsData) {
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors', // bypass CORS restrictions; no response
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participantID, trials: trialsData })
+        });
+        return { success: true, message: "Data sent (no response due to no-cors mode)" };
+      } catch (e) {
+        console.error("Save error:", e);
+        return { success: false, message: e.message };
+      }
+    }
 
     function createTimeline() {
       const timeline = [];
@@ -121,7 +119,7 @@
         type: jsPsychHtmlButtonResponse,
         stimulus: `
           <div class="welcome-card">
-            <h1>Shadow Color Perception Experiment</h1>
+            <h1>Shadow Color Perception Experiment testing</h1>
             <p>Thank you for participating in this color perception study.</p>
             <p><strong>Estimated time: 15 minutes</strong></p>
             <p>Click <strong>"Begin"</strong> when you are ready to start.</p>
@@ -162,63 +160,76 @@
         }
       }
 
+      // Phase 1 trials
       selectedPairs.forEach(pair => {
+        const shuffled = jsPsych.randomization.shuffle(pair);
+        const imageA = pair[0].split('/').pop();
+        const imageB = pair[1].split('/').pop();
+        const displayLeft = shuffled[0];
+        const displayRight = shuffled[1];
+
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
+              <img src="${displayLeft}" />
+              <img src="${displayRight}" />
             </div>
-            <p> Which image has the brighter shadow?</p>
+            <p>Which image has the brighter shadow?</p>
           `,
           choices: ['Left Image', 'Same', 'Right Image'],
           data: {
             phase: 'phase1',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
+            imageA,
+            imageB,
+            image_left: displayLeft.split('/').pop(),
+            image_right: displayRight.split('/').pop()
           },
           post_trial_gap: 500,
           on_finish: data => {
-            const labels = ['left', 'same', 'right'];
-            data.response = labels[data.response];
+            const choice = ['left', 'same', 'right'][data.response];
+            const left = data.image_left;
+            const right = data.image_right;
+
+            let normalized;
+            if (choice === 'same') normalized = 'same';
+            else if ((choice === 'left' && left === imageA) || (choice === 'right' && right === imageA)) normalized = 'imageA';
+            else normalized = 'imageB';
+
+            data.normalized_response = normalized;
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
       });
 
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `
-          <div class="welcome-card">
-            <h2>Phase 2: Color Difference</h2>
-            <p>Again, you’ll see image pairs.</p>
-            <p><strong>Decide if the shadows appear to differ in color.</strong></p>
-          </div>`,
-        choices: ['Start Phase 2'],
-        data: { phase: 'phase2_instructions' },
-        on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
-      });
-
+      // Phase 2 trials
       selectedPairs.forEach(pair => {
+        const shuffled = jsPsych.randomization.shuffle(pair);
+        const imageA = pair[0].split('/').pop();
+        const imageB = pair[1].split('/').pop();
+        const displayLeft = shuffled[0];
+        const displayRight = shuffled[1];
+
         timeline.push({
           type: jsPsychHtmlButtonResponse,
           stimulus: `
             <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
+              <img src="${displayLeft}" />
+              <img src="${displayRight}" />
             </div>
-            <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
+            <p><strong>Do you see a color difference between the shadows?</strong></p>
           `,
           choices: ['Yes', 'No'],
           data: {
             phase: 'phase2',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
+            imageA,
+            imageB,
+            image_left: displayLeft.split('/').pop(),
+            image_right: displayRight.split('/').pop()
           },
           post_trial_gap: 500,
           on_finish: data => {
-            data.response = data.response === 0 ? 'yes' : 'no';
+            data.normalized_response = data.response === 0 ? 'yes' : 'no';
             jsPsych.getDisplayElement().innerHTML = '';
           }
         });
@@ -236,7 +247,7 @@
         data: { phase: 'phase3_instructions' },
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
-      
+
       images.forEach(img => {
         timeline.push({
           type: jsPsychHtmlButtonResponse,
@@ -256,7 +267,8 @@
           }
         });
       });
-     // async data saving block
+
+      // Save data async
       timeline.push({
         type: jsPsychCallFunction,
         func: () => {
@@ -264,10 +276,9 @@
             const form = jsPsych.data.get()
               .filter({ trial_type: 'survey-html-form' })
               .values()[0];
-      
+
             const participantID = form?.response?.participant_id || 'unknown';
-      
-            // Add participantID early so it's available later
+
             jsPsych.data.addProperties({ participantID });
             const trials = jsPsych.data.get()
               .filter(trial => trial.phase)
@@ -280,22 +291,21 @@
                 response: trial.response,
                 rt: trial.rt
               }));
-      
+
             try {
               await saveToGoogleSheets(participantID, trials);
-              // no-cors mode means no response checking possible
             } catch (e) {
+              console.error(e);
             }
             resolve();
           });
         }
       });
-      
-      // Final thank-you screen with repeat or exit
+
+      // Thank you screen with option to repeat or exit
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: () => {
-          // Get participantID from data properties
           const allData = jsPsych.data.get().values();
           const participantData = allData.find(d => d.participantID !== undefined) || {};
           const participantID = participantData.participantID || 'unknown';
@@ -308,20 +318,23 @@
             </div>
           `;
         },
-       choices: ['Repeat Experiment', 'Exit'],
-      on_finish: data => {
-        if (data.response === 0) {
-          window.location.reload();  // reload the entire page to restart experiment
-        } else {
-          jsPsych.endExperiment('Thank you for participating!');
+        choices: ['Repeat Experiment', 'Exit'],
+        on_finish: data => {
+          if (data.response === 0) {
+            window.location.reload();
+          } else {
+            jsPsych.endExperiment('Thank you for participating!');
+          }
         }
-      }
       });
+
       return timeline;
     }
+
     function runExperiment() {
       jsPsych.run(createTimeline());
     }
+
     runExperiment();
   </script>
 </body>
