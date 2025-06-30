@@ -340,25 +340,60 @@
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
       
-      images.forEach(img => {
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div style="display: flex; justify-content: center;">
-              <img src="${img}" />
-            </div>
-            <p>Which shadow looks brighter?</p>
-          `,
-          choices: ['Left Shadow', 'Same', 'Right Shadow'],
-          data: { phase: 'phase3', image: img.split('/').pop() },
-          post_trial_gap: 500,
-          on_finish: data => {
-            const labels = ['left', 'same', 'right'];
-            data.response = labels[data.response];
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
-      });
+      images.slice(0, 10).forEach(img => {
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="display: flex; justify-content: center;">
+        <img src="${img}" />
+      </div>
+      <p>Which shadow looks brighter?</p>
+    `,
+    choices: ['Left Shadow', 'Same', 'Right Shadow'],
+    data: { phase: 'phase3', image: img.split('/').pop() },
+    post_trial_gap: 500,
+    on_finish: data => {
+      const labels = ['left', 'same', 'right'];
+      data.response = labels[data.response];
+      jsPsych.getDisplayElement().innerHTML = '';
+    }
+  });
+});
+
+      timeline.push({
+  type: jsPsychHtmlButtonResponse,
+  stimulus: `
+    <div class="welcome-card">
+      <h2>Phase 4: Color Difference</h2>
+      <p>Again, You'll see single images</p>
+      <p><strong>Decide if the shadows appear to differ in color.</strong></p>
+    </div>`,
+  choices: ['Begin Phase 4'],
+  data: { phase: 'phase4_instructions' },
+  on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+});
+
+// Phase 4 trials: next 10 images (index 10 to 19)
+images.slice(10, 20).forEach(img => {
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="display: flex; justify-content: center;">
+        <img src="${img}" />
+      </div>
+      <p><strong>Do you see a color difference between the shadows?</strong></p>
+    `,
+    choices: ['Yes', 'No'],
+    data: { phase: 'phase4', image: img.split('/').pop() },
+    post_trial_gap: 500,
+    on_finish: data => {
+      data.response = data.response === 0 ? 'yes' : 'no';
+      jsPsych.getDisplayElement().innerHTML = '';
+    }
+  });
+});
+
+
      // async data saving block
       timeline.push({
         type: jsPsychCallFunction,
