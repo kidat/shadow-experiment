@@ -79,27 +79,30 @@
       color: #2e7d32;
       font-weight: bold;
     }
+
     
-@media (max-width: 768px) {
+    @media (max-width: 768px) {
   /* Only target images inside inline flex containers to avoid global overrides */
   div[style*="display: flex"] > img {
     max-width: 45vw !important;     /* half viewport width so two images fit side by side */
+    min-width: 100px !important;    /* prevent images from becoming too small */
     max-height: 250px !important;   /* keep max height */
     width: auto !important;         /* maintain aspect ratio, don’t stretch full width */
     height: auto !important;
+    flex-shrink: 1 !important;      /* allow shrinking if needed */
   }
 
-  /* Container for images side by side */
+  /* Container for images side by side - no wrapping */
   div[style*="display: flex"] {
-    flex-wrap: wrap !important;     /* allow wrapping on very narrow screens */
-    gap: 20px !important;            /* smaller gap for mobile */
+    flex-wrap: nowrap !important;   /* never wrap images */
+    gap: 20px !important;            /* space between images */
     justify-content: center !important;
   }
 
   /* Container for buttons - keep buttons side by side */
   div.jspsych-html-button-response-button-group {
     display: flex !important;
-    flex-wrap: nowrap !important;  /* prevent stacking */
+    flex-wrap: nowrap !important;   /* prevent stacking */
     justify-content: center !important;
     gap: 10px !important;
   }
@@ -107,13 +110,14 @@
   .jspsych-btn {
     padding: 10px 16px !important;
     font-size: 1rem !important;
-    width: auto !important;       /* no forced full width */
+    width: auto !important;         /* no forced full width */
     max-width: 300px !important;
-    margin: 0 !important;         /* remove auto margins */
+    margin: 0 !important;           /* remove auto margins */
     box-sizing: border-box !important;
-    min-width: 100px !important;  /* optional minimum width */
+    min-width: 100px !important;    /* optional minimum width */
   }
 }
+
   </style>
 </head>
 <body>
