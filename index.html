@@ -80,6 +80,27 @@
       font-weight: bold;
     }
 
+    .image-pair {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* reduce gap a bit for better fit */
+  max-width: 100vw; /* container max width */
+  padding: 0 10px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.image-pair img {
+  flex-shrink: 1; /* allow shrinking */
+  flex-grow: 0;
+  max-width: calc((100vw - 40px) / 2); /* half viewport minus gap */
+  height: auto;
+  object-fit: contain;
+  border: 2px solid #808080;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
 @media (max-width: 768px) {
   /* Only target images inside inline flex containers to avoid global overrides */
   div[style*="display: flex"] > img {
@@ -229,7 +250,7 @@
   timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <div style="display: flex; justify-content: center; gap: 50px;">
+      <div class="image-pair">
         <img src="${displayedLeft}" />
         <img src="${displayedRight}" />
       </div>
@@ -291,7 +312,7 @@
   timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <div style="display: flex; justify-content: center; gap: 50px;">
+      <div class="image-pair">
         <img src="${displayedLeft}" />
         <img src="${displayedRight}" />
       </div>
