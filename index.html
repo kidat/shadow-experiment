@@ -245,11 +245,11 @@
 </p>
   `,
   choices: ['Left Image', 'Same', 'Right Image'],
-  data: { phase: 'phase1_example' },
+  data: {},
   on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
 });
 
-     selectedPairs.forEach(pair => {
+  selectedPairs.forEach(pair => {
   const [trueLeft, trueRight] = pair;
 
   // Randomly reverse display order
@@ -324,7 +324,7 @@
           </p>
       `,
       choices: ['Yes', 'No'],
-      data: { phase: 'phase2_example' },
+      data: {},
       on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
     });
 
