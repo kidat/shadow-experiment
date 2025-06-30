@@ -79,22 +79,39 @@
       color: #2e7d32;
       font-weight: bold;
     }
-
-  @media (max-width: 768px) {
+@media (max-width: 768px) {
   img {
-    max-width: 90vw;
-    max-height: 250px;
+    max-width: 90vw;     /* keep this */
+    max-height: 250px;   /* keep this */
+    width: auto;         /* change from 100% to auto so image aspect ratio & sides aren't cut */
+    height: auto;        /* maintain aspect ratio */
+  }
+
+  /* Container for images side by side */
+  div[style*="display: flex"] {
+    flex-wrap: wrap;     /* allow images to wrap if really narrow */
+    gap: 20px;           /* smaller gap for mobile */
+  }
+
+  /* Container for buttons - keep buttons side by side */
+  div.jspsych-html-button-response-button-group {
+    display: flex !important;
+    flex-wrap: nowrap !important;  /* no stacking */
+    justify-content: center;        /* center buttons horizontally */
+    gap: 10px;                      /* space between buttons */
   }
 
   .jspsych-btn {
     padding: 10px 16px !important;
     font-size: 1rem !important;
-    width: 100% !important;
+    width: auto !important;       /* remove forced full width */
     max-width: 300px;
-    margin: 10px auto !important;
+    margin: 0 !important;         /* remove auto margins to keep inline */
     box-sizing: border-box;
+    min-width: 100px;             /* optional: minimum button size */
   }
 }
+
 
   </style>
 </head>
