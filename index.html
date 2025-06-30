@@ -240,7 +240,7 @@
       <img src="${images[1]}" />
     </div>
     <p><strong>Example:</strong> Which image has the brighter shadow?</p>
-   <p style="color: red;"><em>Correct answer: Right Image</em></p>
+   <p style="color: #28a745;"><em>Correct answer: Right Image</em></p>
   `,
   choices: ['Left Image', 'Same', 'Right Image'],
   data: { phase: 'phase1_example' },
@@ -302,13 +302,12 @@
             <h2>Phase 2: Color Difference</h2>
             <p>Again, you’ll see image pairs.</p>
             <p><strong>Decide if the shadows appear to differ in color.</strong></p>
+            <p style="color: #66bb6a;"><em>Note: Ignore brightness differences; focus only on color differences.</em></p>
           </div>`,
         choices: ['Start Phase 2'],
         data: { phase: 'phase2_instructions' },
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
-
-
 
       timeline.push({
   type: jsPsychHtmlButtonResponse,
@@ -318,15 +317,14 @@
       <img src="${images[3]}" />
     </div>
     <p><strong>Example:</strong> Do you see a color difference between the shadows?</p>
-    <p><em>Correct answer: Yes</em></p>
+    <p style="color: #28a745;"><em>Correct answer: Yes</em></p>
   `,
   choices: ['Yes', 'No'],
   data: { phase: 'phase2_example' },
   on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
 });
 
-      
-      
+           
     selectedPairs.forEach(pair => {
   const [trueLeft, trueRight] = pair;
 
@@ -359,7 +357,6 @@
     }
   });
 });
-
 
       timeline.push({
         type: jsPsychHtmlButtonResponse,
