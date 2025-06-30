@@ -439,19 +439,19 @@ images.slice(10, 20).forEach(img => {
             const participantID = form?.response?.participant_id || 'unknown';
       
             // Add participantID early so it's available later
-            jsPsych.data.addProperties({ participantID });
-            const trials = jsPsych.data.get()
-              .filter(trial => trial.phase)
-              .values()
-              .map(trial => ({
-                phase: trial.phase,
-                image_left: trial.image_left || '',
-                image_right: trial.image_right || '',
-                image: trial.image || '',
-                response: trial.response,
-                rt: trial.rt
-              }));
-      
+           jsPsych.data.addProperties({ participantID });
+          const trials = jsPsych.data.get()
+            .filter(trial => trial.phase && !trial.phase.endsWith('_example'))
+            .values()
+            .map(trial => ({
+              phase: trial.phase,
+              image_left: trial.image_left || '',
+              image_right: trial.image_right || '',
+              image: trial.image || '',
+              response: trial.response,
+              rt: trial.rt
+            }));
+               
             try {
               await saveToGoogleSheets(participantID, trials);
               // no-cors mode means no response checking possible
