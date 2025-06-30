@@ -304,10 +304,7 @@
             <h2>Phase 2: Color Difference</h2>
             <p>Again, you’ll see image pairs.</p>
             <p><strong>Decide if the shadows appear to differ in color.</strong></p>
-            <p style="color: #ffffff; font-weight: bold; font-size: 1.6rem;">
-           <em>Note: Ignore brightness differences; focus only on color differences.</em>
-            </p>
-
+           <p><strong> Note: Ignore brightness differences; focus only on color differences.</strong></p>
           </div>`,
         choices: ['Start Phase 2'],
         data: { phase: 'phase2_instructions' },
@@ -315,56 +312,55 @@
       });
 
       timeline.push({
-  type: jsPsychHtmlButtonResponse,
-  stimulus: `
-    <div class="image-pair">
-      <img src="${images[2]}" />
-      <img src="${images[3]}" />
-    </div>
-    <p><strong>Example:</strong> Do you see a color difference between the shadows?</p>
-     <p style="color: #ffffff; font-weight: bold; font-size: 1.6rem;">
-      <em>Correct answer: Yes</em>
-       </p>
-
-  `,
-  choices: ['Yes', 'No'],
-  data: { phase: 'phase2_example' },
-  on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
-});
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+        <div class="image-pair">
+          <img src="${images[2]}" />
+          <img src="${images[3]}" />
+        </div>
+        <p><strong>Example:</strong> Do you see a color difference between the shadows?</p>
+         <p style="color: #ffffff; font-weight: bold; font-size: 1.6rem;">
+          <em>Correct answer: Yes</em>
+          </p>
+      `,
+      choices: ['Yes', 'No'],
+      data: { phase: 'phase2_example' },
+      on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+    });
 
            
     selectedPairs.forEach(pair => {
-  const [trueLeft, trueRight] = pair;
-
-  // Randomize display order
-  const reverse = Math.random() < 0.5;
-  const displayedLeft = reverse ? trueRight : trueLeft;
-  const displayedRight = reverse ? trueLeft : trueRight;
-
-  timeline.push({
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div class="image-pair">
-        <img src="${displayedLeft}" />
-        <img src="${displayedRight}" />
-      </div>
-      <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
-    `,
-    choices: ['Yes', 'No'],
-    data: {
-      phase: 'phase2',
-      image_left: trueLeft.split('/').pop(),          // logical pairing
-      image_right: trueRight.split('/').pop(),
-      display_left: displayedLeft.split('/').pop(),   // actual shown
-      display_right: displayedRight.split('/').pop()
-    },
-    post_trial_gap: 500,
-    on_finish: data => {
-      data.response = data.response === 0 ? 'yes' : 'no';
-      jsPsych.getDisplayElement().innerHTML = '';
-    }
+    const [trueLeft, trueRight] = pair;
+  
+    // Randomize display order
+    const reverse = Math.random() < 0.5;
+    const displayedLeft = reverse ? trueRight : trueLeft;
+    const displayedRight = reverse ? trueLeft : trueRight;
+  
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+        <div class="image-pair">
+          <img src="${displayedLeft}" />
+          <img src="${displayedRight}" />
+        </div>
+        <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
+      `,
+        choices: ['Yes', 'No'],
+      data: {
+        phase: 'phase2',
+        image_left: trueLeft.split('/').pop(),          // logical pairing
+        image_right: trueRight.split('/').pop(),
+        display_left: displayedLeft.split('/').pop(),   // actual shown
+        display_right: displayedRight.split('/').pop()
+      },
+      post_trial_gap: 500,
+      on_finish: data => {
+        data.response = data.response === 0 ? 'yes' : 'no';
+        jsPsych.getDisplayElement().innerHTML = '';
+      }
+    });
   });
-});
 
       timeline.push({
         type: jsPsychHtmlButtonResponse,
@@ -399,7 +395,7 @@
   });
 });
 
-      timeline.push({
+  timeline.push({
   type: jsPsychHtmlButtonResponse,
   stimulus: `
     <div class="welcome-card">
@@ -431,8 +427,6 @@ images.slice(10, 20).forEach(img => {
     }
   });
 });
-
-
      // async data saving block
       timeline.push({
         type: jsPsychCallFunction,
