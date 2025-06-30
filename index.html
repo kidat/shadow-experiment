@@ -426,41 +426,43 @@ images.slice(15, 25).forEach(img => {
     }
   });
 });
-     // async data saving block
-      timeline.push({
-        type: jsPsychCallFunction,
-        func: () => {
-          return new Promise(async (resolve) => {
-            const form = jsPsych.data.get()
-              .filter({ trial_type: 'survey-html-form' })
-              .values()[0];
-      
-            const participantID = form?.response?.participant_id || 'unknown';
-      
-            // Add participantID early so it's available later
-             jsPsych.data.addProperties({ participantID });
-          const validPhases = ['phase1', 'phase2', 'phase3', 'phase4'];
-          const trials = jsPsych.data.get()
-            .filter(trial => trial.phase && validPhases.includes(trial.phase))
-            .values()
-            .map(trial => ({
-              phase: trial.phase,
-              image_left: trial.image_left || '',
-              image_right: trial.image_right || '',
-              image: trial.image || '',
-              response: trial.response,
-              rt: trial.rt
-            }));
-              
-            try {
-              await saveToGoogleSheets(participantID, trials);
-              // no-cors mode means no response checking possible
-            } catch (e) {
-            }
-            resolve();
-          });
-        }
-      });
+      // async data saving block
+timeline.push({
+  type: jsPsychCallFunction,
+  func: () => {
+    return new Promise(async (resolve) => {
+      const form = jsPsych.data.get()
+        .filter({ trial_type: 'survey-html-form' })
+        .values()[0];
+
+      const participantID = form?.response?.participant_id || 'unknown';
+
+      // Add participantID early so it's available later
+      jsPsych.data.addProperties({ participantID });
+
+      const validPhases = ['phase1', 'phase2', 'phase3', 'phase4'];
+      const trials = jsPsych.data.get()
+        .filter(trial => trial.data && trial.data.phase && validPhases.includes(trial.data.phase))
+        .values()
+        .map(trial => ({
+          phase: trial.data.phase,
+          image_left: trial.data.image_left || '',
+          image_right: trial.data.image_right || '',
+          image: trial.data.image || '',
+          response: trial.data.response,
+          rt: trial.data.rt || trial.rt || null
+        }));
+
+      try {
+        await saveToGoogleSheets(participantID, trials);
+      } catch (e) {
+        console.error("Save error:", e);
+      }
+      resolve();
+    });
+  }
+});
+
       
       // Final thank-you screen with repeat or exit
       timeline.push({
