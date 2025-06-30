@@ -80,7 +80,6 @@
       font-weight: bold;
     }
 
-
 @media (max-width: 768px) {
   /* Only target images inside inline flex containers to avoid global overrides */
   div[style*="display: flex"] > img {
@@ -107,20 +106,27 @@
     gap: 12px !important;            /* increased gap between buttons */
   }
 
+  /* Buttons - updated to resize automatically */
   .jspsych-btn {
-    padding: 12px 20px !important;  /* slightly larger padding */
+    flex-grow: 1 !important;      /* allow buttons to grow */
+    flex-shrink: 1 !important;    /* allow buttons to shrink */
+    flex-basis: 0 !important;     /* base size for flex grow/shrink */
+    
+    padding: 12px 12px !important;   /* reduced horizontal padding for better fit */
     font-size: 1rem !important;
-    width: auto !important;         /* no forced full width */
-    max-width: 280px !important;
-    margin: 0 !important;           /* remove auto margins */
+    width: auto !important;          /* no forced full width */
+    max-width: none !important;      /* remove max-width limit */
+    margin: 0 !important;            /* remove auto margins */
     box-sizing: border-box !important;
-    min-width: 100px !important;    /* optional minimum width */
+    min-width: 60px !important;      /* allow shrinking but not too small */
+    
     border-radius: 8px !important;
     background-color: #007acc !important;
     color: white !important;
     border: none !important;
     cursor: pointer !important;
     transition: background-color 0.3s ease !important;
+    white-space: nowrap !important; /* prevent text wrapping */
   }
 
   .jspsych-btn:hover {
