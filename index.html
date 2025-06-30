@@ -80,8 +80,8 @@
       font-weight: bold;
     }
 
-    
-    @media (max-width: 768px) {
+
+@media (max-width: 768px) {
   /* Only target images inside inline flex containers to avoid global overrides */
   div[style*="display: flex"] > img {
     max-width: 45vw !important;     /* half viewport width so two images fit side by side */
@@ -104,19 +104,31 @@
     display: flex !important;
     flex-wrap: nowrap !important;   /* prevent stacking */
     justify-content: center !important;
-    gap: 10px !important;
+    gap: 12px !important;            /* increased gap between buttons */
   }
 
   .jspsych-btn {
-    padding: 10px 16px !important;
+    padding: 12px 20px !important;  /* slightly larger padding */
     font-size: 1rem !important;
     width: auto !important;         /* no forced full width */
-    max-width: 300px !important;
+    max-width: 280px !important;
     margin: 0 !important;           /* remove auto margins */
     box-sizing: border-box !important;
     min-width: 100px !important;    /* optional minimum width */
+    border-radius: 8px !important;
+    background-color: #007acc !important;
+    color: white !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
+  }
+
+  .jspsych-btn:hover {
+    background-color: #005fa3 !important;
   }
 }
+
+    
 
   </style>
 </head>
