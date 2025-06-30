@@ -439,9 +439,10 @@ images.slice(10, 20).forEach(img => {
             const participantID = form?.response?.participant_id || 'unknown';
       
             // Add participantID early so it's available later
-           jsPsych.data.addProperties({ participantID });
+             jsPsych.data.addProperties({ participantID });
+          const validPhases = ['phase1', 'phase2', 'phase3', 'phase4'];
           const trials = jsPsych.data.get()
-            .filter(trial => trial.phase && !trial.phase.endsWith('_example'))
+            .filter(trial => trial.phase && validPhases.includes(trial.phase))
             .values()
             .map(trial => ({
               phase: trial.phase,
@@ -451,7 +452,7 @@ images.slice(10, 20).forEach(img => {
               response: trial.response,
               rt: trial.rt
             }));
-               
+              
             try {
               await saveToGoogleSheets(participantID, trials);
               // no-cors mode means no response checking possible
