@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shadow Color Perception Experiment</title>
   <script src="https://unpkg.com/jspsych@7.3.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response"></script>
@@ -78,6 +79,13 @@
       color: #2e7d32;
       font-weight: bold;
     }
+
+    @media (max-width: 768px) {
+  img {
+    max-width: 90vw;
+    max-height: 250px;
+  }
+}
   </style>
 </head>
 <body>
