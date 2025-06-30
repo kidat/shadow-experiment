@@ -162,30 +162,53 @@
         }
       }
 
-      selectedPairs.forEach(pair => {
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
-            </div>
-            <p> Which image has the brighter shadow?</p>
-          `,
-          choices: ['Left Image', 'Same', 'Right Image'],
-          data: {
-            phase: 'phase1',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
-          },
-          post_trial_gap: 500,
-          on_finish: data => {
-            const labels = ['left', 'same', 'right'];
-            data.response = labels[data.response];
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
-      });
+     selectedPairs.forEach(pair => {
+  const [trueLeft, trueRight] = pair;
+
+  // Randomly reverse display order
+  const reverse = Math.random() < 0.5;
+  const displayedLeft = reverse ? trueRight : trueLeft;
+  const displayedRight = reverse ? trueLeft : trueRight;
+
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="display: flex; justify-content: center; gap: 50px;">
+        <img src="${displayedLeft}" />
+        <img src="${displayedRight}" />
+      </div>
+      <p>Which image has the brighter shadow?</p>
+    `,
+    choices: ['Left Image', 'Same', 'Right Image'],
+    data: {
+      phase: 'phase1',
+      image_left: trueLeft.split('/').pop(),      // original logical left
+      image_right: trueRight.split('/').pop(),    // original logical right
+      display_left: displayedLeft.split('/').pop(),   // for checking
+      display_right: displayedRight.split('/').pop()  // for checking
+    },
+    post_trial_gap: 500,
+    on_finish: data => {
+      const rawResponse = ['left', 'same', 'right'][data.response];
+
+      if (!reverse) {
+        // images displayed in original order: response is correct
+        data.response = rawResponse;
+      } else {
+        // images displayed in reverse order: remap left/right
+        if (rawResponse === 'left') {
+          data.response = 'right';
+        } else if (rawResponse === 'right') {
+          data.response = 'left';
+        } else {
+          data.response = 'same';
+        }
+      }
+
+      jsPsych.getDisplayElement().innerHTML = '';
+    }
+  });
+});
 
       timeline.push({
         type: jsPsychHtmlButtonResponse,
@@ -200,29 +223,40 @@
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
-      selectedPairs.forEach(pair => {
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `
-            <div style="display: flex; justify-content: center; gap: 50px;">
-              <img src="${pair[0]}" />
-              <img src="${pair[1]}" />
-            </div>
-            <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
-          `,
-          choices: ['Yes', 'No'],
-          data: {
-            phase: 'phase2',
-            image_left: pair[0].split('/').pop(),
-            image_right: pair[1].split('/').pop()
-          },
-          post_trial_gap: 500,
-          on_finish: data => {
-            data.response = data.response === 0 ? 'yes' : 'no';
-            jsPsych.getDisplayElement().innerHTML = '';
-          }
-        });
-      });
+      
+    selectedPairs.forEach(pair => {
+  const [trueLeft, trueRight] = pair;
+
+  // Randomize display order
+  const reverse = Math.random() < 0.5;
+  const displayedLeft = reverse ? trueRight : trueLeft;
+  const displayedRight = reverse ? trueLeft : trueRight;
+
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="display: flex; justify-content: center; gap: 50px;">
+        <img src="${displayedLeft}" />
+        <img src="${displayedRight}" />
+      </div>
+      <p><strong>Do you see a color difference between the shadows of each pair?</strong></p>
+    `,
+    choices: ['Yes', 'No'],
+    data: {
+      phase: 'phase2',
+      image_left: trueLeft.split('/').pop(),          // logical pairing
+      image_right: trueRight.split('/').pop(),
+      display_left: displayedLeft.split('/').pop(),   // actual shown
+      display_right: displayedRight.split('/').pop()
+    },
+    post_trial_gap: 500,
+    on_finish: data => {
+      data.response = data.response === 0 ? 'yes' : 'no';
+      jsPsych.getDisplayElement().innerHTML = '';
+    }
+  });
+});
+
 
       timeline.push({
         type: jsPsychHtmlButtonResponse,
