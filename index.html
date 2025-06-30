@@ -79,39 +79,41 @@
       color: #2e7d32;
       font-weight: bold;
     }
+
+    
 @media (max-width: 768px) {
   img {
-    max-width: 90vw;     /* keep this */
-    max-height: 250px;   /* keep this */
-    width: auto;         /* change from 100% to auto so image aspect ratio & sides aren't cut */
-    height: auto;        /* maintain aspect ratio */
+    max-width: 45vw;     /* half viewport width so two images fit side by side */
+    max-height: 250px;   /* keep max height */
+    width: auto;         /* maintain aspect ratio, don’t stretch full width */
+    height: auto;
   }
 
   /* Container for images side by side */
   div[style*="display: flex"] {
-    flex-wrap: wrap;     /* allow images to wrap if really narrow */
+    flex-wrap: wrap;     /* allow wrapping on very narrow screens */
     gap: 20px;           /* smaller gap for mobile */
+    justify-content: center;
   }
 
   /* Container for buttons - keep buttons side by side */
   div.jspsych-html-button-response-button-group {
     display: flex !important;
-    flex-wrap: nowrap !important;  /* no stacking */
-    justify-content: center;        /* center buttons horizontally */
-    gap: 10px;                      /* space between buttons */
+    flex-wrap: nowrap !important;  /* prevent stacking */
+    justify-content: center;
+    gap: 10px;
   }
 
   .jspsych-btn {
     padding: 10px 16px !important;
     font-size: 1rem !important;
-    width: auto !important;       /* remove forced full width */
+    width: auto !important;       /* no forced full width */
     max-width: 300px;
-    margin: 0 !important;         /* remove auto margins to keep inline */
+    margin: 0 !important;         /* remove auto margins */
     box-sizing: border-box;
-    min-width: 100px;             /* optional: minimum button size */
+    min-width: 100px;             /* optional minimum width */
   }
 }
-
 
   </style>
 </head>
