@@ -223,6 +223,7 @@
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
+      
       const selectedPairs = [];
       for (let i = 0; i < images.length; i += 5) {
         const block = images.slice(i, i + 5);
@@ -230,6 +231,21 @@
           selectedPairs.push([block[j], block[j + 1]]);
         }
       }
+
+      timeline.push({
+  type: jsPsychHtmlButtonResponse,
+  stimulus: `
+    <div class="image-pair">
+      <img src="${images[0]}" />
+      <img src="${images[1]}" />
+    </div>
+    <p><strong>Example:</strong> Which image has the brighter shadow?</p>
+    <p><em>Correct answer: Left Image</em></p>
+  `,
+  choices: ['Left Image', 'Same', 'Right Image'],
+  data: { phase: 'phase1_example' },
+  on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+});
 
      selectedPairs.forEach(pair => {
   const [trueLeft, trueRight] = pair;
@@ -292,6 +308,24 @@
         on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
       });
 
+
+
+      timeline.push({
+  type: jsPsychHtmlButtonResponse,
+  stimulus: `
+    <div class="image-pair">
+      <img src="${images[2]}" />
+      <img src="${images[3]}" />
+    </div>
+    <p><strong>Example:</strong> Do you see a color difference between the shadows?</p>
+    <p><em>Correct answer: Yes</em></p>
+  `,
+  choices: ['Yes', 'No'],
+  data: { phase: 'phase2_example' },
+  on_finish: () => jsPsych.getDisplayElement().innerHTML = ''
+});
+
+      
       
     selectedPairs.forEach(pair => {
   const [trueLeft, trueRight] = pair;
